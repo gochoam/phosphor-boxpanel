@@ -31,6 +31,8 @@ import {
   ResizeMessage, Widget
 } from 'phosphor-widget';
 
+import './index.css';
+
 
 /**
  * `p-BoxPanel`: the class name added to BoxPanel instances.
