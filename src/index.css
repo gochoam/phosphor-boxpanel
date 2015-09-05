@@ -5,3 +5,11 @@
 |
 | The full license is in the file LICENSE, distributed with this software.
 |----------------------------------------------------------------------------*/
+.p-BoxPanel {
+  position: relative;
+}
+
+
+.p-BoxPanel > .p-Widget {
+  position: absolute;
+}
