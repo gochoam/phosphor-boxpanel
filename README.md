@@ -108,3 +108,31 @@ Usage Examples
 
 **Note:** This module is fully compatible with Node/Babel/ES6/ES5. Simply
 omit the type declarations when using a language other than TypeScript.
+
+```typescript
+import { BoxPanel } from 'phosphor-boxpanel';
+
+import { Widget } from 'phosphor-widget';
+
+
+// Create some content for the panel.
+var w1 = new Widget();
+var w2 = new Widget();
+var w3 = new Widget();
+
+// Set the widget stretch factors (optional).
+BoxPanel.setStretch(w1, 0);
+BoxPanel.setStretch(w2, 2);
+BoxPanel.setStretch(w3, 1);
+
+// Set the widget size basis (optional).
+BoxPanel.setSizeBasis(w1, 200);
+BoxPanel.setSizeBasis(w2, 650);
+BoxPanel.setSizeBasis(w3, 350);
+
+// Setup the box panel.
+var sp = new BoxPanel();
+sp.direction = BoxPanel.LeftToRight;
+sp.spacing = 5;
+sp.children = [w1, w2, w3];
+```
