@@ -127,7 +127,7 @@ class BoxPanel extends Widget {
    */
   static directionProperty = new Property<BoxPanel, Direction>({
     value: Direction.TopToBottom,
-    changed: onDirectionChanged,
+    changed: (owner, old, value) => owner._onDirectionChanged(old, value),
   });
 
   /**
@@ -141,7 +141,7 @@ class BoxPanel extends Widget {
   static spacingProperty = new Property<BoxPanel, number>({
     value: 8,
     coerce: (owner, value) => Math.max(0, value | 0),
-    changed: onSpacingChanged,
+    changed: owner => postMessage(owner, MSG_LAYOUT_REQUEST),
   });
 
   /**
@@ -532,11 +532,23 @@ class BoxPanel extends Widget {
   }
 
   /**
+   * The change handler for the [[orientationProperty]].
+   */
+  private _onDirectionChanged(old: Direction, value: Direction): void {
+    this.toggleClass(LTR_CLASS, value === Direction.LeftToRight);
+    this.toggleClass(RTL_CLASS, value === Direction.RightToLeft);
+    this.toggleClass(TTB_CLASS, value === Direction.TopToBottom);
+    this.toggleClass(BTT_CLASS, value === Direction.BottomToTop);
+    postMessage(this, MSG_LAYOUT_REQUEST);
+  }
+
+  /**
    * The handler for the child property changed signal.
    */
   private _onPropertyChanged(sender: Widget, args: IChangedArgs): void {
-    if (args.property === BoxPanel.stretchProperty ||
-        args.property === BoxPanel.sizeBasisProperty) {
+    switch (args.property) {
+    case BoxPanel.stretchProperty:
+    case BoxPanel.sizeBasisProperty:
       postMessage(this, MSG_LAYOUT_REQUEST);
     }
   }
@@ -545,26 +557,6 @@ class BoxPanel extends Widget {
   private _box: IBoxSizing = null;
   private _sizers: BoxSizer[] = [];
   private _items: BoxItem[] = [];
-}
-
-
-/**
- * The change handler for the [[orientationProperty]].
- */
-function onDirectionChanged(owner: BoxPanel, old: Direction, dir: Direction): void {
-  owner.toggleClass(LTR_CLASS, dir === Direction.LeftToRight);
-  owner.toggleClass(RTL_CLASS, dir === Direction.RightToLeft);
-  owner.toggleClass(TTB_CLASS, dir === Direction.TopToBottom);
-  owner.toggleClass(BTT_CLASS, dir === Direction.BottomToTop);
-  postMessage(owner, MSG_LAYOUT_REQUEST);
-}
-
-
-/**
- * The change handler for the [[spacingProperty]].
- */
-function onSpacingChanged(owner: BoxPanel, old: number, spacing: number): void {
-  postMessage(owner, MSG_LAYOUT_REQUEST);
 }
 
 
