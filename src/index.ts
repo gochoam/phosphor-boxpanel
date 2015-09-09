@@ -372,7 +372,9 @@ class BoxPanel extends Widget {
    * A message handler invoked on a `'layout-request'` message.
    */
   protected onLayoutRequest(msg: Message): void {
-    this._setupGeometry();
+    if (this.isAttached) {
+      this._setupGeometry();
+    }
   }
 
   /**
