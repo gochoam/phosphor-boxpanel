@@ -28,7 +28,8 @@ import {
 
 import {
   ChildMessage, MSG_AFTER_ATTACH, MSG_BEFORE_DETACH, MSG_LAYOUT_REQUEST,
-  ResizeMessage, Widget
+  ResizeMessage, Widget, clearLayoutGeometry, getLayoutGeometry,
+  setLayoutGeometry
 } from 'phosphor-widget';
 
 import './index.css';
@@ -242,7 +243,6 @@ class BoxPanel extends Widget {
    * Dispose of the resources held by the panel.
    */
   dispose(): void {
-    this._items.length = 0;
     this._sizers.length = 0;
     super.dispose();
   }
@@ -292,7 +292,6 @@ class BoxPanel extends Widget {
    */
   protected onChildAdded(msg: ChildMessage): void {
     Property.getChanged(msg.child).connect(this._onPropertyChanged, this);
-    arrays.insert(this._items, msg.currentIndex, new BoxItem(msg.child));
     arrays.insert(this._sizers, msg.currentIndex, new BoxSizer());
     this.node.appendChild(msg.child.node);
     if (this.isAttached) sendMessage(msg.child, MSG_AFTER_ATTACH);
@@ -304,18 +303,17 @@ class BoxPanel extends Widget {
    */
   protected onChildRemoved(msg: ChildMessage): void {
     Property.getChanged(msg.child).disconnect(this._onPropertyChanged, this);
-    arrays.removeAt(this._items, msg.previousIndex);
     arrays.removeAt(this._sizers, msg.previousIndex);
     if (this.isAttached) sendMessage(msg.child, MSG_BEFORE_DETACH);
     this.node.removeChild(msg.child.node);
     postMessage(this, MSG_LAYOUT_REQUEST);
+    clearLayoutGeometry(msg.child);
   }
 
   /**
    * A message handler invoked on a `'child-moved'` message.
    */
   protected onChildMoved(msg: ChildMessage): void {
-    arrays.move(this._items, msg.previousIndex, msg.currentIndex);
     arrays.move(this._sizers, msg.previousIndex, msg.currentIndex);
     this.update();
   }
@@ -353,9 +351,14 @@ class BoxPanel extends Widget {
    */
   protected onResize(msg: ResizeMessage): void {
     if (this.isVisible) {
-      var width = msg.width < 0 ? this.node.offsetWidth : msg.width;
-      var height = msg.height < 0 ? this.node.offsetHeight : msg.height;
-      this._layoutItems(width, height);
+      var width = msg.width;
+      var height = msg.height;
+      if (width < 0 || height < 0) {
+        var geo = getLayoutGeometry(this);
+        if (width < 0) width = geo ? geo.width : this.node.offsetWidth;
+        if (height < 0) height = geo ? geo.height : this.node.offsetHeight;
+      }
+      this._layoutChildren(width, height);
     }
   }
 
@@ -364,7 +367,10 @@ class BoxPanel extends Widget {
    */
   protected onUpdateRequest(msg: Message): void {
     if (this.isVisible) {
-      this._layoutItems(this.node.offsetWidth, this.node.offsetHeight);
+      var geo = getLayoutGeometry(this);
+      var width = geo ? geo.width : this.node.offsetWidth;
+      var height = geo ? geo.height : this.node.offsetHeight;
+      this._layoutChildren(width, height);
     }
   }
 
@@ -378,13 +384,13 @@ class BoxPanel extends Widget {
   }
 
   /**
-   * Update the box items and size constraints of the panel.
+   * Update the size constraints of the panel.
    */
   private _setupGeometry(): void {
     // Compute the visible item count.
     var visibleCount = 0;
-    for (var i = 0, n = this._items.length; i < n; ++i) {
-      if (!this._items[i].widget.hidden) visibleCount++;
+    for (var i = 0, n = this.childCount; i < n; ++i) {
+      if (!this.childAt(i).hidden) visibleCount++;
     }
 
     // Update the fixed space for the visible items.
@@ -399,17 +405,17 @@ class BoxPanel extends Widget {
     if (dir === Direction.LeftToRight || dir === Direction.RightToLeft) {
       minW = this._fixedSpace;
       maxW = visibleCount > 0 ? minW : maxW;
-      for (var i = 0, n = this._items.length; i < n; ++i) {
-        var item = this._items[i];
+      for (var i = 0, n = this.childCount; i < n; ++i) {
+        var widget = this.childAt(i);
         var sizer = this._sizers[i];
-        if (item.widget.hidden) {
+        if (widget.hidden) {
           sizer.minSize = 0;
           sizer.maxSize = 0;
           continue;
         }
-        var limits = sizeLimits(item.widget.node);
-        sizer.sizeHint = BoxPanel.getSizeBasis(item.widget);
-        sizer.stretch = BoxPanel.getStretch(item.widget);
+        var limits = sizeLimits(widget.node);
+        sizer.sizeHint = BoxPanel.getSizeBasis(widget);
+        sizer.stretch = BoxPanel.getStretch(widget);
         sizer.minSize = limits.minWidth;
         sizer.maxSize = limits.maxWidth;
         minW += limits.minWidth;
@@ -420,17 +426,17 @@ class BoxPanel extends Widget {
     } else {
       minH = this._fixedSpace;
       maxH = visibleCount > 0 ? minH : maxH;
-      for (var i = 0, n = this._items.length; i < n; ++i) {
-        var item = this._items[i];
+      for (var i = 0, n = this.childCount; i < n; ++i) {
+        var widget = this.childAt(i);
         var sizer = this._sizers[i];
-        if (item.widget.hidden) {
+        if (widget.hidden) {
           sizer.minSize = 0;
           sizer.maxSize = 0;
           continue;
         }
-        var limits = sizeLimits(item.widget.node);
-        sizer.sizeHint = BoxPanel.getSizeBasis(item.widget);
-        sizer.stretch = BoxPanel.getStretch(item.widget);
+        var limits = sizeLimits(widget.node);
+        sizer.sizeHint = BoxPanel.getSizeBasis(widget);
+        sizer.stretch = BoxPanel.getStretch(widget);
         sizer.minSize = limits.minHeight;
         sizer.maxSize = limits.maxHeight;
         minH += limits.minHeight;
@@ -462,11 +468,11 @@ class BoxPanel extends Widget {
   }
 
   /**
-   * Layout the items using the given offset width and height.
+   * Layout the children using the given offset width and height.
    */
-  private _layoutItems(offsetWidth: number, offsetHeight: number): void {
-    // Bail early if their are no items to arrange.
-    if (this._items.length === 0) {
+  private _layoutChildren(offsetWidth: number, offsetHeight: number): void {
+    // Bail early if their are no children to arrange.
+    if (this.childCount === 0) {
       return;
     }
 
@@ -484,48 +490,48 @@ class BoxPanel extends Widget {
     var spacing = this.spacing;
     if (dir === Direction.LeftToRight) {
       boxCalc(this._sizers, Math.max(0, width - this._fixedSpace));
-      for (var i = 0, n = this._items.length; i < n; ++i) {
-        var item = this._items[i];
-        if (item.widget.hidden) {
+      for (var i = 0, n = this.childCount; i < n; ++i) {
+        var widget = this.childAt(i);
+        if (widget.hidden) {
           continue;
         }
         var size = this._sizers[i].size;
-        item.layoutWidget(left, top, size, height);
+        setLayoutGeometry(widget, left, top, size, height);
         left += size + spacing;
       }
     } else if (dir === Direction.TopToBottom) {
       boxCalc(this._sizers, Math.max(0, height - this._fixedSpace));
-      for (var i = 0, n = this._items.length; i < n; ++i) {
-        var item = this._items[i];
-        if (item.widget.hidden) {
+      for (var i = 0, n = this.childCount; i < n; ++i) {
+        var widget = this.childAt(i);
+        if (widget.hidden) {
           continue;
         }
         var size = this._sizers[i].size;
-        item.layoutWidget(left, top, width, size);
+        setLayoutGeometry(widget, left, top, width, size);
         top += size + spacing;
       }
     } else if (dir === Direction.RightToLeft) {
       left += width;
       boxCalc(this._sizers, Math.max(0, width - this._fixedSpace));
-      for (var i = 0, n = this._items.length; i < n; ++i) {
-        var item = this._items[i];
-        if (item.widget.hidden) {
+      for (var i = 0, n = this.childCount; i < n; ++i) {
+        var widget = this.childAt(i);
+        if (widget.hidden) {
           continue;
         }
         var size = this._sizers[i].size;
-        item.layoutWidget(left - size, top, size, height);
+        setLayoutGeometry(widget, left - size, top, size, height);
         left -= size + spacing;
       }
     } else {
       top += height;
       boxCalc(this._sizers, Math.max(0, height - this._fixedSpace));
-      for (var i = 0, n = this._items.length; i < n; ++i) {
-        var item = this._items[i];
-        if (item.widget.hidden) {
+      for (var i = 0, n = this.childCount; i < n; ++i) {
+        var widget = this.childAt(i);
+        if (widget.hidden) {
           continue;
         }
         var size = this._sizers[i].size;
-        item.layoutWidget(left, top - size, width, size);
+        setLayoutGeometry(widget, left, top - size, width, size);
         top -= size + spacing;
       }
     }
@@ -556,58 +562,4 @@ class BoxPanel extends Widget {
   private _fixedSpace = 0;
   private _box: IBoxSizing = null;
   private _sizers: BoxSizer[] = [];
-  private _items: BoxItem[] = [];
-}
-
-
-/**
- * A class which assists with the layout of a widget.
- */
-class BoxItem {
-  /**
-   * Construct a new box item.
-   */
-  constructor(widget: Widget) {
-    this._widget = widget;
-  }
-
-  /**
-   * Get the widget for the item.
-   */
-  get widget(): Widget {
-    return this._widget;
-  }
-
-  /**
-   * Update the layout geometry for the widget.
-   */
-  layoutWidget(left: number, top: number, width: number, height: number): void {
-    var resized = false;
-    var style = this._widget.node.style;
-    if (left !== this._left) {
-      this._left = left;
-      style.left = left + 'px';
-    }
-    if (top !== this._top) {
-      this._top = top;
-      style.top = top + 'px';
-    }
-    if (width !== this._width) {
-      resized = true;
-      this._width = width;
-      style.width = width + 'px';
-    }
-    if (height !== this._height) {
-      resized = true;
-      this._height = height;
-      style.height = height + 'px';
-    }
-    if (resized) sendMessage(this._widget, new ResizeMessage(width, height));
-  }
-
-  private _widget: Widget;
-  private _top = NaN;
-  private _left = NaN;
-  private _width = NaN;
-  private _height = NaN;
 }
