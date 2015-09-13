@@ -15,10 +15,6 @@ import {
 } from 'phosphor-boxengine';
 
 import {
-  IBoxSizing, boxSizing, sizeLimits
-} from 'phosphor-domutil';
-
-import {
   Message, postMessage, sendMessage
 } from 'phosphor-messaging';
 
@@ -28,8 +24,7 @@ import {
 
 import {
   ChildMessage, MSG_AFTER_ATTACH, MSG_BEFORE_DETACH, MSG_LAYOUT_REQUEST,
-  ResizeMessage, Widget, clearLayoutGeometry, getLayoutGeometry,
-  setLayoutGeometry
+  ResizeMessage, Widget
 } from 'phosphor-widget';
 
 import './index.css';
@@ -307,7 +302,7 @@ class BoxPanel extends Widget {
     if (this.isAttached) sendMessage(msg.child, MSG_BEFORE_DETACH);
     this.node.removeChild(msg.child.node);
     postMessage(this, MSG_LAYOUT_REQUEST);
-    clearLayoutGeometry(msg.child);
+    msg.child.clearOffsetGeometry();
   }
 
   /**
@@ -351,14 +346,12 @@ class BoxPanel extends Widget {
    */
   protected onResize(msg: ResizeMessage): void {
     if (this.isVisible) {
-      var width = msg.width;
-      var height = msg.height;
-      if (width < 0 || height < 0) {
-        var geo = getLayoutGeometry(this);
-        if (width < 0) width = geo ? geo.width : this.node.offsetWidth;
-        if (height < 0) height = geo ? geo.height : this.node.offsetHeight;
+      if (msg.width < 0 || msg.height < 0) {
+        var rect = this.offsetRect;
+        this._layoutChildren(rect.width, rect.height);
+      } else {
+        this._layoutChildren(msg.width, msg.height);
       }
-      this._layoutChildren(width, height);
     }
   }
 
@@ -367,10 +360,8 @@ class BoxPanel extends Widget {
    */
   protected onUpdateRequest(msg: Message): void {
     if (this.isVisible) {
-      var geo = getLayoutGeometry(this);
-      var width = geo ? geo.width : this.node.offsetWidth;
-      var height = geo ? geo.height : this.node.offsetHeight;
-      this._layoutChildren(width, height);
+      var rect = this.offsetRect;
+      this._layoutChildren(rect.width, rect.height);
     }
   }
 
@@ -413,7 +404,7 @@ class BoxPanel extends Widget {
           sizer.maxSize = 0;
           continue;
         }
-        var limits = sizeLimits(widget.node);
+        var limits = widget.sizeLimits;
         sizer.sizeHint = BoxPanel.getSizeBasis(widget);
         sizer.stretch = BoxPanel.getStretch(widget);
         sizer.minSize = limits.minWidth;
@@ -434,7 +425,7 @@ class BoxPanel extends Widget {
           sizer.maxSize = 0;
           continue;
         }
-        var limits = sizeLimits(widget.node);
+        var limits = widget.sizeLimits;
         sizer.sizeHint = BoxPanel.getSizeBasis(widget);
         sizer.stretch = BoxPanel.getStretch(widget);
         sizer.minSize = limits.minHeight;
@@ -447,18 +438,14 @@ class BoxPanel extends Widget {
     }
 
     // Add the box sizing to the size constraints.
-    var box = this._box = boxSizing(this.node);
+    var box = this.boxSizing;
     minW += box.horizontalSum;
     minH += box.verticalSum;
     maxW += box.horizontalSum;
     maxH += box.verticalSum;
 
-    // Update the inline style size constraints.
-    var style = this.node.style;
-    style.minWidth = minW + 'px';
-    style.minHeight = minH + 'px';
-    style.maxWidth = maxW < Infinity ? maxW + 'px' : '';
-    style.maxHeight = maxH < Infinity ? maxH + 'px' : '';
+    // Update the panel's size constraints.
+    this.setSizeLimits(minW, minH, maxW, maxH);
 
     // Notifiy the parent that it should relayout.
     if (this.parent) sendMessage(this.parent, MSG_LAYOUT_REQUEST);
@@ -476,10 +463,8 @@ class BoxPanel extends Widget {
       return;
     }
 
-    // Ensure the box sizing is computed for the panel.
-    var box = this._box || (this._box = boxSizing(this.node));
-
     // Compute the actual layout bounds adjusted for border and padding.
+    var box = this.boxSizing;
     var top = box.paddingTop;
     var left = box.paddingLeft;
     var width = offsetWidth - box.horizontalSum;
@@ -496,7 +481,7 @@ class BoxPanel extends Widget {
           continue;
         }
         var size = this._sizers[i].size;
-        setLayoutGeometry(widget, left, top, size, height);
+        widget.setOffsetGeometry(left, top, size, height);
         left += size + spacing;
       }
     } else if (dir === Direction.TopToBottom) {
@@ -507,7 +492,7 @@ class BoxPanel extends Widget {
           continue;
         }
         var size = this._sizers[i].size;
-        setLayoutGeometry(widget, left, top, width, size);
+        widget.setOffsetGeometry(left, top, width, size);
         top += size + spacing;
       }
     } else if (dir === Direction.RightToLeft) {
@@ -519,7 +504,7 @@ class BoxPanel extends Widget {
           continue;
         }
         var size = this._sizers[i].size;
-        setLayoutGeometry(widget, left - size, top, size, height);
+        widget.setOffsetGeometry(left - size, top, size, height);
         left -= size + spacing;
       }
     } else {
@@ -531,7 +516,7 @@ class BoxPanel extends Widget {
           continue;
         }
         var size = this._sizers[i].size;
-        setLayoutGeometry(widget, left, top - size, width, size);
+        widget.setOffsetGeometry(left, top - size, width, size);
         top -= size + spacing;
       }
     }
@@ -560,6 +545,5 @@ class BoxPanel extends Widget {
   }
 
   private _fixedSpace = 0;
-  private _box: IBoxSizing = null;
   private _sizers: BoxSizer[] = [];
 }
