@@ -19,7 +19,7 @@ import {
 } from 'phosphor-messaging';
 
 import {
-  IChangedArgs, Property
+  Property
 } from 'phosphor-properties';
 
 import {
@@ -152,6 +152,7 @@ class BoxPanel extends Widget {
   static stretchProperty = new Property<Widget, number>({
     value: 0,
     coerce: (owner, value) => Math.max(0, value | 0),
+    changed: onChildPropertyChanged,
   });
 
   /**
@@ -167,6 +168,7 @@ class BoxPanel extends Widget {
   static sizeBasisProperty = new Property<Widget, number>({
     value: 0,
     coerce: (owner, value) => Math.max(0, value | 0),
+    changed: onChildPropertyChanged,
   });
 
   /**
@@ -286,7 +288,6 @@ class BoxPanel extends Widget {
    * A message handler invoked on a `'child-added'` message.
    */
   protected onChildAdded(msg: ChildMessage): void {
-    Property.getChanged(msg.child).connect(this._onPropertyChanged, this);
     arrays.insert(this._sizers, msg.currentIndex, new BoxSizer());
     this.node.appendChild(msg.child.node);
     if (this.isAttached) sendMessage(msg.child, MSG_AFTER_ATTACH);
@@ -297,7 +298,6 @@ class BoxPanel extends Widget {
    * A message handler invoked on a `'child-removed'` message.
    */
   protected onChildRemoved(msg: ChildMessage): void {
-    Property.getChanged(msg.child).disconnect(this._onPropertyChanged, this);
     arrays.removeAt(this._sizers, msg.previousIndex);
     if (this.isAttached) sendMessage(msg.child, MSG_BEFORE_DETACH);
     this.node.removeChild(msg.child.node);
@@ -533,17 +533,16 @@ class BoxPanel extends Widget {
     postMessage(this, MSG_LAYOUT_REQUEST);
   }
 
-  /**
-   * The handler for the child property changed signal.
-   */
-  private _onPropertyChanged(sender: Widget, args: IChangedArgs): void {
-    switch (args.property) {
-    case BoxPanel.stretchProperty:
-    case BoxPanel.sizeBasisProperty:
-      postMessage(this, MSG_LAYOUT_REQUEST);
-    }
-  }
-
   private _fixedSpace = 0;
   private _sizers: BoxSizer[] = [];
+}
+
+
+/**
+ * The change handler for the attached child properties.
+ */
+function onChildPropertyChanged(child: Widget): void {
+  if (child.parent instanceof BoxPanel) {
+    postMessage(child.parent, MSG_LAYOUT_REQUEST);
+  }
 }
