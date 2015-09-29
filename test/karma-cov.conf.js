@@ -4,8 +4,7 @@ module.exports = function (config) {
     frameworks: ['browserify', 'mocha'],
     reporters: ['mocha', 'coverage'],
     preprocessors: { 'build/index.js': ['browserify'] },
-    browserify: { debug: true, transform: ['browserify-css',
-                                           'browserify-istanbul'] },
+    browserify: { debug: true, transform: ['browserify-istanbul'] },
     files: ['build/index.js'],
     coverageReporter: {
       reporters : [
