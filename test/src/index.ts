@@ -50,13 +50,6 @@ class LogWidget extends Widget {
 }
 
 
-function triggerMouseEvent (node: HTMLElement, eventType: string, options: any={}) {
-  options.bubbles = true;
-  var clickEvent = new MouseEvent(eventType, options);
-  node.dispatchEvent(clickEvent);
-}
-
-
 describe('phosphor-boxpanel', () => {
 
 
