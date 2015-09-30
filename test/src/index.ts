@@ -10,7 +10,7 @@
 import expect = require('expect.js');
 
 import {
-  Message, postMessage, sendMessage
+  Message, sendMessage
 } from 'phosphor-messaging';
 
 import {
