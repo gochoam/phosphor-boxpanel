@@ -40,25 +40,25 @@ const BOX_PANEL_CLASS = 'p-BoxPanel';
  * `p-mod-left-to-right`: the class name added to ltr box panels.
  */
 export
-const LTR_CLASS = 'p-mod-left-to-right';
+const LEFT_TO_RIGHT_CLASS = 'p-mod-left-to-right';
 
 /**
  * `p-mod-right-to-left`: the class name added to rtl box panels.
  */
 export
-const RTL_CLASS = 'p-mod-right-to-left';
+const RIGHT_TO_LEFT_CLASS = 'p-mod-right-to-left';
 
 /**
  * `p-mod-top-to-bottom`: the class name added to ttb box panels.
  */
 export
-const TTB_CLASS = 'p-mod-top-to-bottom';
+const TOP_TO_BOTTOM_CLASS = 'p-mod-top-to-bottom';
 
 /**
  * `p-mod-bottom-to-top`: the class name added to btt box panels.
  */
 export
-const BTT_CLASS = 'p-mod-bottom-to-top';
+const BOTTOM_TO_TOP_CLASS = 'p-mod-bottom-to-top';
 
 
 /**
@@ -233,7 +233,7 @@ class BoxPanel extends Widget {
   constructor() {
     super();
     this.addClass(BOX_PANEL_CLASS);
-    this.addClass(TTB_CLASS);
+    this.addClass(TOP_TO_BOTTOM_CLASS);
   }
 
   /**
@@ -526,10 +526,10 @@ class BoxPanel extends Widget {
    * The change handler for the [[orientationProperty]].
    */
   private _onDirectionChanged(old: Direction, value: Direction): void {
-    this.toggleClass(LTR_CLASS, value === Direction.LeftToRight);
-    this.toggleClass(RTL_CLASS, value === Direction.RightToLeft);
-    this.toggleClass(TTB_CLASS, value === Direction.TopToBottom);
-    this.toggleClass(BTT_CLASS, value === Direction.BottomToTop);
+    this.toggleClass(LEFT_TO_RIGHT_CLASS, value === Direction.LeftToRight);
+    this.toggleClass(RIGHT_TO_LEFT_CLASS, value === Direction.RightToLeft);
+    this.toggleClass(TOP_TO_BOTTOM_CLASS, value === Direction.TopToBottom);
+    this.toggleClass(BOTTOM_TO_TOP_CLASS, value === Direction.BottomToTop);
     postMessage(this, MSG_LAYOUT_REQUEST);
   }
 
