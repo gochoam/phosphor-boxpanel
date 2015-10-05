@@ -1,6 +1,6 @@
 {
   "name": "phosphor-boxpanel",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "A Phosphor layout widget which arranges its children into a single row or column.",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
