@@ -35,18 +35,6 @@ class LogPanel extends BoxPanel {
     super.processMessage(msg);
     this.messages.push(msg.type);
   }
-
-}
-
-
-class LogWidget extends Widget {
-
-  messages: string[] = [];
-
-  processMessage(msg: Message): void {
-    super.processMessage(msg);
-    this.messages.push(msg.type);
-  }
 }
 
 
@@ -431,7 +419,7 @@ describe('phosphor-boxpanel', () => {
 
       it('should be invoked when a child is added', () => {
         var panel = new LogPanel();
-        var widget = new LogWidget();
+        var widget = new Widget();
         attachWidget(panel, document.body);
         expect(panel.messages.indexOf('child-added')).to.be(-1);
         panel.children = [widget];
@@ -440,7 +428,7 @@ describe('phosphor-boxpanel', () => {
 
       it('should post a `layout-request`', (done) => {
         var panel = new LogPanel();
-        var widget = new LogWidget();
+        var widget = new Widget();
         attachWidget(panel, document.body);
         clearMessageData(panel);
         panel.children = [widget];
@@ -467,7 +455,7 @@ describe('phosphor-boxpanel', () => {
 
       it('should post a `layout-request`', (done) => {
         var panel = new LogPanel();
-        var widget = new LogWidget();
+        var widget = new Widget();
         attachWidget(panel, document.body);
         panel.children = [widget];
         clearMessageData(panel);
