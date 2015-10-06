@@ -38,6 +38,17 @@ class LogPanel extends BoxPanel {
 }
 
 
+class LogWidget extends Widget {
+
+  messages: string[] = [];
+
+  processMessage(msg: Message): void {
+    super.processMessage(msg);
+    this.messages.push(msg.type);
+  }
+}
+
+
 describe('phosphor-boxpanel', () => {
 
 
@@ -426,6 +437,15 @@ describe('phosphor-boxpanel', () => {
         expect(panel.messages.indexOf('child-added')).to.not.be(-1);
       });
 
+      it('should send `after-attach` to the child', () => {
+        var panel = new LogPanel();
+        var widget = new LogWidget();
+        attachWidget(panel, document.body);
+        expect(widget.messages.indexOf('after-attach')).to.be(-1);
+        panel.children = [widget];
+        expect(widget.messages.indexOf('after-attach')).to.not.be(-1);
+      });
+
       it('should post a `layout-request`', (done) => {
         var panel = new LogPanel();
         var widget = new Widget();
@@ -451,6 +471,16 @@ describe('phosphor-boxpanel', () => {
         expect(panel.messages.indexOf('child-removed')).to.be(-1);
         panel.children = [];
         expect(panel.messages.indexOf('child-removed')).to.not.be(-1);
+      });
+
+      it('should send `before-detach` to the child', () => {
+        var panel = new LogPanel();
+        var widget = new LogWidget();
+        attachWidget(panel, document.body);
+        panel.children = [widget];
+        expect(widget.messages.indexOf('before-detach')).to.be(-1);
+        panel.children = [];
+        expect(widget.messages.indexOf('before-detach')).to.not.be(-1);
       });
 
       it('should post a `layout-request`', (done) => {
