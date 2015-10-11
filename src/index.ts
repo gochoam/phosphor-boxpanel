@@ -31,37 +31,6 @@ import './index.css';
 
 
 /**
- * `p-BoxPanel`: the class name added to BoxPanel instances.
- */
-export
-const BOX_PANEL_CLASS = 'p-BoxPanel';
-
-/**
- * `p-mod-left-to-right`: the class name added to ltr box panels.
- */
-export
-const LEFT_TO_RIGHT_CLASS = 'p-mod-left-to-right';
-
-/**
- * `p-mod-right-to-left`: the class name added to rtl box panels.
- */
-export
-const RIGHT_TO_LEFT_CLASS = 'p-mod-right-to-left';
-
-/**
- * `p-mod-top-to-bottom`: the class name added to ttb box panels.
- */
-export
-const TOP_TO_BOTTOM_CLASS = 'p-mod-top-to-bottom';
-
-/**
- * `p-mod-bottom-to-top`: the class name added to btt box panels.
- */
-export
-const BOTTOM_TO_TOP_CLASS = 'p-mod-bottom-to-top';
-
-
-/**
  * The layout direction of a box panel.
  */
 export
@@ -93,6 +62,31 @@ enum Direction {
  */
 export
 class BoxPanel extends Widget {
+  /**
+   * The class name added to BoxPanel instances.
+   */
+  static p_BoxPanel = 'p-BoxPanel';
+
+  /**
+   * The class name added to left-to-right box panels.
+   */
+  static p_mod_left_to_right = 'p-mod-left-to-right';
+
+  /**
+   * The class name added to right-to-left box panels.
+   */
+  static p_mod_right_to_left = 'p-mod-right-to-left';
+
+  /**
+   * The class name added to top-to-bottom box panels.
+   */
+  static p_mod_top_to_bottom = 'p-mod-top-to-bottom';
+
+  /**
+   * The class name added to bottom-to-top box panels.
+   */
+  static p_mod_bottom_to_top = 'p-mod-bottom-to-top';
+
   /**
    * A convenience alias of the `LeftToRight` [[Direction]].
    */
@@ -232,8 +226,8 @@ class BoxPanel extends Widget {
    */
   constructor() {
     super();
-    this.addClass(BOX_PANEL_CLASS);
-    this.addClass(TOP_TO_BOTTOM_CLASS);
+    this.addClass(BoxPanel.p_BoxPanel);
+    this.addClass(BoxPanel.p_mod_top_to_bottom);
   }
 
   /**
@@ -526,10 +520,10 @@ class BoxPanel extends Widget {
    * The change handler for the [[orientationProperty]].
    */
   private _onDirectionChanged(old: Direction, value: Direction): void {
-    this.toggleClass(LEFT_TO_RIGHT_CLASS, value === Direction.LeftToRight);
-    this.toggleClass(RIGHT_TO_LEFT_CLASS, value === Direction.RightToLeft);
-    this.toggleClass(TOP_TO_BOTTOM_CLASS, value === Direction.TopToBottom);
-    this.toggleClass(BOTTOM_TO_TOP_CLASS, value === Direction.BottomToTop);
+    this.toggleClass(BoxPanel.p_mod_left_to_right, value === Direction.LeftToRight);
+    this.toggleClass(BoxPanel.p_mod_right_to_left, value === Direction.RightToLeft);
+    this.toggleClass(BoxPanel.p_mod_top_to_bottom, value === Direction.TopToBottom);
+    this.toggleClass(BoxPanel.p_mod_bottom_to_top, value === Direction.BottomToTop);
     postMessage(this, MSG_LAYOUT_REQUEST);
   }
 

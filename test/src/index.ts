@@ -22,8 +22,7 @@ import {
 } from 'phosphor-widget';
 
 import {
-  BOTTOM_TO_TOP_CLASS, BOX_PANEL_CLASS, BoxPanel, Direction,
-  LEFT_TO_RIGHT_CLASS, RIGHT_TO_LEFT_CLASS, TOP_TO_BOTTOM_CLASS
+  BoxPanel, Direction
 } from '../../lib/index';
 
 
@@ -51,48 +50,47 @@ class LogWidget extends Widget {
 
 describe('phosphor-boxpanel', () => {
 
-
-  describe('BOX_PANEL_CLASS', () => {
-
-    it('should equal `p-BoxPanel`', () => {
-      expect(BOX_PANEL_CLASS).to.be('p-BoxPanel');
-    });
-
-  });
-
-  describe('LEFT_TO_RIGHT_CLASS', () => {
-
-    it('should equal `p-mod-left-to-right`', () => {
-      expect(LEFT_TO_RIGHT_CLASS).to.be('p-mod-left-to-right');
-    });
-
-  });
-
-  describe('RIGHT_TO_LEFT_CLASS', () => {
-
-    it('should equal `p-mod-right-to-left`', () => {
-      expect(RIGHT_TO_LEFT_CLASS).to.be('p-mod-right-to-left');
-    });
-
-  });
-
-  describe('TOP_TO_BOTTOM_CLASS', () => {
-
-    it('should equal `p-mod-top-to-bottom`', () => {
-      expect(TOP_TO_BOTTOM_CLASS).to.be('p-mod-top-to-bottom');
-    });
-
-  });
-
-  describe('BOTTOM_TO_TOP_CLASS', () => {
-
-    it('should equal `p-mod-bottom-to-top`', () => {
-      expect(BOTTOM_TO_TOP_CLASS).to.be('p-mod-bottom-to-top');
-    });
-
-  });
-
   describe('BoxPanel', () => {
+
+    describe('.p_BoxPanel', () => {
+
+      it('should equal `p-BoxPanel`', () => {
+        expect(BoxPanel.p_BoxPanel).to.be('p-BoxPanel');
+      });
+
+    });
+
+    describe('.p_mod_left_to_right', () => {
+
+      it('should equal `p-mod-left-to-right`', () => {
+        expect(BoxPanel.p_mod_left_to_right).to.be('p-mod-left-to-right');
+      });
+
+    });
+
+    describe('.p_mod_right_to_left', () => {
+
+      it('should equal `p-mod-right-to-left`', () => {
+        expect(BoxPanel.p_mod_right_to_left).to.be('p-mod-right-to-left');
+      });
+
+    });
+
+    describe('.p_mod_top_to_bottom', () => {
+
+      it('should equal `p-mod-top-to-bottom`', () => {
+        expect(BoxPanel.p_mod_top_to_bottom).to.be('p-mod-top-to-bottom');
+      });
+
+    });
+
+    describe('.p_mod_bottom_to_top', () => {
+
+      it('should equal `p-mod-bottom-to-top`', () => {
+        expect(BoxPanel.p_mod_bottom_to_top).to.be('p-mod-bottom-to-top');
+      });
+
+    });
 
     describe('.LeftToRight', () => {
 
@@ -141,25 +139,25 @@ describe('phosphor-boxpanel', () => {
       it('should toggle the directional CSS classes', () => {
         var panel = new LogPanel();
         BoxPanel.directionProperty.set(panel, Direction.LeftToRight);
-        expect(panel.hasClass(LEFT_TO_RIGHT_CLASS)).to.be(true);
-        expect(panel.hasClass(RIGHT_TO_LEFT_CLASS)).to.be(false);
-        expect(panel.hasClass(TOP_TO_BOTTOM_CLASS)).to.be(false);
-        expect(panel.hasClass(BOTTOM_TO_TOP_CLASS)).to.be(false);
+        expect(panel.hasClass(BoxPanel.p_mod_left_to_right)).to.be(true);
+        expect(panel.hasClass(BoxPanel.p_mod_right_to_left)).to.be(false);
+        expect(panel.hasClass(BoxPanel.p_mod_top_to_bottom)).to.be(false);
+        expect(panel.hasClass(BoxPanel.p_mod_bottom_to_top)).to.be(false);
         BoxPanel.directionProperty.set(panel, Direction.RightToLeft);
-        expect(panel.hasClass(LEFT_TO_RIGHT_CLASS)).to.be(false);
-        expect(panel.hasClass(RIGHT_TO_LEFT_CLASS)).to.be(true);
-        expect(panel.hasClass(TOP_TO_BOTTOM_CLASS)).to.be(false);
-        expect(panel.hasClass(BOTTOM_TO_TOP_CLASS)).to.be(false);
+        expect(panel.hasClass(BoxPanel.p_mod_left_to_right)).to.be(false);
+        expect(panel.hasClass(BoxPanel.p_mod_right_to_left)).to.be(true);
+        expect(panel.hasClass(BoxPanel.p_mod_top_to_bottom)).to.be(false);
+        expect(panel.hasClass(BoxPanel.p_mod_bottom_to_top)).to.be(false);
         BoxPanel.directionProperty.set(panel, Direction.TopToBottom);
-        expect(panel.hasClass(LEFT_TO_RIGHT_CLASS)).to.be(false);
-        expect(panel.hasClass(RIGHT_TO_LEFT_CLASS)).to.be(false);
-        expect(panel.hasClass(TOP_TO_BOTTOM_CLASS)).to.be(true);
-        expect(panel.hasClass(BOTTOM_TO_TOP_CLASS)).to.be(false);
+        expect(panel.hasClass(BoxPanel.p_mod_left_to_right)).to.be(false);
+        expect(panel.hasClass(BoxPanel.p_mod_right_to_left)).to.be(false);
+        expect(panel.hasClass(BoxPanel.p_mod_top_to_bottom)).to.be(true);
+        expect(panel.hasClass(BoxPanel.p_mod_bottom_to_top)).to.be(false);
         BoxPanel.directionProperty.set(panel, Direction.BottomToTop);
-        expect(panel.hasClass(LEFT_TO_RIGHT_CLASS)).to.be(false);
-        expect(panel.hasClass(RIGHT_TO_LEFT_CLASS)).to.be(false);
-        expect(panel.hasClass(TOP_TO_BOTTOM_CLASS)).to.be(false);
-        expect(panel.hasClass(BOTTOM_TO_TOP_CLASS)).to.be(true);
+        expect(panel.hasClass(BoxPanel.p_mod_left_to_right)).to.be(false);
+        expect(panel.hasClass(BoxPanel.p_mod_right_to_left)).to.be(false);
+        expect(panel.hasClass(BoxPanel.p_mod_top_to_bottom)).to.be(false);
+        expect(panel.hasClass(BoxPanel.p_mod_bottom_to_top)).to.be(true);
       });
 
       it('should post a `layout-request`', (done) => {
@@ -358,10 +356,10 @@ describe('phosphor-boxpanel', () => {
         expect(panel instanceof BoxPanel).to.be(true);
       });
 
-      it('should add `BOX_PANEL_CLASS` and `TOP_TO_BOTTOM_CLASS` ', () => {
+      it('should add `p-BoxPanel` and `p-mod-top-to-bottom` ', () => {
         var panel = new BoxPanel();
-        expect(panel.hasClass(BOX_PANEL_CLASS)).to.be(true);
-        expect(panel.hasClass(TOP_TO_BOTTOM_CLASS)).to.be(true);
+        expect(panel.hasClass(BoxPanel.p_BoxPanel)).to.be(true);
+        expect(panel.hasClass(BoxPanel.p_mod_top_to_bottom)).to.be(true);
       });
 
     });
