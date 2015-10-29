@@ -12,14 +12,14 @@ import {
 } from '../lib/index';
 
 import {
-  Widget, attachWidget
+  Widget
 } from 'phosphor-widget';
 
 import './index.css';
 
 
 function createContent(name: string): Widget {
-  var widget = new Widget();
+  let widget = new Widget();
   widget.addClass('content');
   widget.addClass(name);
   return widget;
@@ -27,21 +27,21 @@ function createContent(name: string): Widget {
 
 
 function main(): void {
-  var red = createContent('red');
-  var green = createContent('green');
-  var blue = createContent('blue');
-  var yellow = createContent('yellow');
+  let red = createContent('red');
+  let green = createContent('green');
+  let blue = createContent('blue');
+  let yellow = createContent('yellow');
 
   BoxPanel.setStretch(red, 1);
   BoxPanel.setStretch(green, 2);
   BoxPanel.setStretch(blue, 3);
   BoxPanel.setStretch(yellow, 1);
 
-  var panel = new BoxPanel();
+  let panel = new BoxPanel();
   panel.children = [red, green, blue, yellow];
   panel.id = 'main';
 
-  var refresh = () => {
+  let refresh = () => {
     if (document.documentElement.offsetWidth < 600) {
       panel.direction = BoxPanel.TopToBottom;
     } else {
@@ -50,7 +50,7 @@ function main(): void {
     panel.update();
   };
 
-  attachWidget(panel, document.body);
+  Widget.attach(panel, document.body);
 
   refresh();
 

@@ -54,9 +54,9 @@
     "url": "https://github.com/phosphorjs/phosphor-boxpanel.git"
   },
   "files": [
-    "lib/index.js",
     "lib/index.css",
-    "lib/index.d.ts"
+    "lib/index.d.ts",
+    "lib/index.js"
   ],
   "browserify": {
     "transform": [
@@ -64,11 +64,11 @@
     ]
   },
   "keywords": [
-    "ui",
-    "panel",
     "box",
     "boxlayout",
     "boxpanel",
+    "panel",
+    "ui",
     "widget",
     "widgets"
   ],
