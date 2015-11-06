@@ -27,7 +27,7 @@ import {
 } from 'phosphor-properties';
 
 import {
-  ChildMessage, ResizeMessage, Widget
+  ChildMessage, Panel, ResizeMessage, Widget
 } from 'phosphor-widget';
 
 import './index.css';
@@ -90,7 +90,7 @@ enum Direction {
  * A widget which arranges its children in a single row or column.
  */
 export
-class BoxPanel extends Widget {
+class BoxPanel extends Panel {
   /**
    * A convenience alias of the `LeftToRight` [[Direction]].
    */
@@ -120,6 +120,7 @@ class BoxPanel extends Widget {
    * **See also:** [[direction]]
    */
   static directionProperty = new Property<BoxPanel, Direction>({
+    name: 'direction',
     value: Direction.TopToBottom,
     changed: (owner, old, value) => owner._onDirectionChanged(old, value),
   });
@@ -133,9 +134,10 @@ class BoxPanel extends Widget {
    * **See also:** [[spacing]]
    */
   static spacingProperty = new Property<BoxPanel, number>({
+    name: 'spacing',
     value: 8,
     coerce: (owner, value) => Math.max(0, value | 0),
-    changed: owner => postMessage(owner, Widget.MsgLayoutRequest),
+    changed: owner => postMessage(owner, Panel.MsgLayoutRequest),
   });
 
   /**
@@ -148,6 +150,7 @@ class BoxPanel extends Widget {
    * **See also:** [[getStretch]], [[setStretch]]
    */
   static stretchProperty = new Property<Widget, number>({
+    name: 'stretch',
     value: 0,
     coerce: (owner, value) => Math.max(0, value | 0),
     changed: onChildPropertyChanged,
@@ -164,6 +167,7 @@ class BoxPanel extends Widget {
    * **See also:** [[getSizeBasis]], [[setSizeBasis]]
    */
   static sizeBasisProperty = new Property<Widget, number>({
+    name: 'sizeBasis',
     value: 0,
     coerce: (owner, value) => Math.max(0, value | 0),
     changed: onChildPropertyChanged,
@@ -289,7 +293,15 @@ class BoxPanel extends Widget {
     arrays.insert(this._sizers, msg.currentIndex, new BoxSizer());
     this.node.appendChild(msg.child.node);
     if (this.isAttached) sendMessage(msg.child, Widget.MsgAfterAttach);
-    postMessage(this, Widget.MsgLayoutRequest);
+    postMessage(this, Panel.MsgLayoutRequest);
+  }
+
+  /**
+   * A message handler invoked on a `'child-moved'` message.
+   */
+  protected onChildMoved(msg: ChildMessage): void {
+    arrays.move(this._sizers, msg.previousIndex, msg.currentIndex);
+    postMessage(this, Widget.MsgUpdateRequest);
   }
 
   /**
@@ -299,44 +311,38 @@ class BoxPanel extends Widget {
     arrays.removeAt(this._sizers, msg.previousIndex);
     if (this.isAttached) sendMessage(msg.child, Widget.MsgBeforeDetach);
     this.node.removeChild(msg.child.node);
-    postMessage(this, Widget.MsgLayoutRequest);
+    postMessage(this, Panel.MsgLayoutRequest);
     resetGeometry(msg.child);
-  }
-
-  /**
-   * A message handler invoked on a `'child-moved'` message.
-   */
-  protected onChildMoved(msg: ChildMessage): void {
-    arrays.move(this._sizers, msg.previousIndex, msg.currentIndex);
-    this.update();
   }
 
   /**
    * A message handler invoked on an `'after-show'` message.
    */
   protected onAfterShow(msg: Message): void {
-    this.update(true);
+    super.onAfterShow(msg);
+    sendMessage(this, Widget.MsgUpdateRequest);
   }
 
   /**
    * A message handler invoked on an `'after-attach'` message.
    */
   protected onAfterAttach(msg: Message): void {
-    postMessage(this, Widget.MsgLayoutRequest);
+    super.onAfterAttach(msg);
+    postMessage(this, Panel.MsgLayoutRequest);
   }
 
   /**
    * A message handler invoked on a `'child-shown'` message.
    */
   protected onChildShown(msg: ChildMessage): void {
-    postMessage(this, Widget.MsgLayoutRequest);
+    postMessage(this, Panel.MsgLayoutRequest);
   }
 
   /**
    * A message handler invoked on a `'child-hidden'` message.
    */
   protected onChildHidden(msg: ChildMessage): void {
-    postMessage(this, Widget.MsgLayoutRequest);
+    postMessage(this, Panel.MsgLayoutRequest);
   }
 
   /**
@@ -374,8 +380,9 @@ class BoxPanel extends Widget {
   private _setupGeometry(): void {
     // Compute the visible item count.
     let visibleCount = 0;
-    for (let i = 0, n = this.childCount; i < n; ++i) {
-      if (!this.childAt(i).hidden) visibleCount++;
+    let children = this.children;
+    for (let i = 0, n = children.length; i < n; ++i) {
+      if (!children.get(i).hidden) visibleCount++;
     }
 
     // Update the fixed space for the visible items.
@@ -390,8 +397,8 @@ class BoxPanel extends Widget {
     if (dir === Direction.LeftToRight || dir === Direction.RightToLeft) {
       minW = this._fixedSpace;
       maxW = visibleCount > 0 ? minW : maxW;
-      for (let i = 0, n = this.childCount; i < n; ++i) {
-        let widget = this.childAt(i);
+      for (let i = 0, n = children.length; i < n; ++i) {
+        let widget = children.get(i);
         let sizer = this._sizers[i];
         if (widget.hidden) {
           sizer.minSize = 0;
@@ -411,8 +418,8 @@ class BoxPanel extends Widget {
     } else {
       minH = this._fixedSpace;
       maxH = visibleCount > 0 ? minH : maxH;
-      for (let i = 0, n = this.childCount; i < n; ++i) {
-        let widget = this.childAt(i);
+      for (let i = 0, n = children.length; i < n; ++i) {
+        let widget = children.get(i);
         let sizer = this._sizers[i];
         if (widget.hidden) {
           sizer.minSize = 0;
@@ -446,10 +453,10 @@ class BoxPanel extends Widget {
     style.maxHeight = maxH === Infinity ? 'none' : maxH + 'px';
 
     // Notifiy the parent that it should relayout.
-    if (this.parent) sendMessage(this.parent, Widget.MsgLayoutRequest);
+    if (this.parent) sendMessage(this.parent, Panel.MsgLayoutRequest);
 
     // Update the layout for the child widgets.
-    this.update(true);
+    sendMessage(this, Widget.MsgUpdateRequest);
   }
 
   /**
@@ -457,7 +464,8 @@ class BoxPanel extends Widget {
    */
   private _layoutChildren(offsetWidth: number, offsetHeight: number): void {
     // Bail early if their are no children to arrange.
-    if (this.childCount === 0) {
+    let children = this.children;
+    if (children.length === 0) {
       return;
     }
 
@@ -475,8 +483,8 @@ class BoxPanel extends Widget {
     let spacing = this.spacing;
     if (dir === Direction.LeftToRight) {
       boxCalc(this._sizers, Math.max(0, width - this._fixedSpace));
-      for (let i = 0, n = this.childCount; i < n; ++i) {
-        let widget = this.childAt(i);
+      for (let i = 0, n = children.length; i < n; ++i) {
+        let widget = children.get(i);
         if (widget.hidden) {
           continue;
         }
@@ -486,8 +494,8 @@ class BoxPanel extends Widget {
       }
     } else if (dir === Direction.TopToBottom) {
       boxCalc(this._sizers, Math.max(0, height - this._fixedSpace));
-      for (let i = 0, n = this.childCount; i < n; ++i) {
-        let widget = this.childAt(i);
+      for (let i = 0, n = children.length; i < n; ++i) {
+        let widget = children.get(i);
         if (widget.hidden) {
           continue;
         }
@@ -498,8 +506,8 @@ class BoxPanel extends Widget {
     } else if (dir === Direction.RightToLeft) {
       left += width;
       boxCalc(this._sizers, Math.max(0, width - this._fixedSpace));
-      for (let i = 0, n = this.childCount; i < n; ++i) {
-        let widget = this.childAt(i);
+      for (let i = 0, n = children.length; i < n; ++i) {
+        let widget = children.get(i);
         if (widget.hidden) {
           continue;
         }
@@ -510,8 +518,8 @@ class BoxPanel extends Widget {
     } else {
       top += height;
       boxCalc(this._sizers, Math.max(0, height - this._fixedSpace));
-      for (let i = 0, n = this.childCount; i < n; ++i) {
-        let widget = this.childAt(i);
+      for (let i = 0, n = children.length; i < n; ++i) {
+        let widget = children.get(i);
         if (widget.hidden) {
           continue;
         }
@@ -530,7 +538,7 @@ class BoxPanel extends Widget {
     this.toggleClass(RIGHT_TO_LEFT_CLASS, value === Direction.RightToLeft);
     this.toggleClass(TOP_TO_BOTTOM_CLASS, value === Direction.TopToBottom);
     this.toggleClass(BOTTOM_TO_TOP_CLASS, value === Direction.BottomToTop);
-    postMessage(this, Widget.MsgLayoutRequest);
+    postMessage(this, Panel.MsgLayoutRequest);
   }
 
   private _fixedSpace = 0;
@@ -568,7 +576,8 @@ interface IRect {
 /**
  * A private attached property which stores a widget offset rect.
  */
-let rectProperty = new Property<Widget, IRect>({
+const rectProperty = new Property<Widget, IRect>({
+  name: 'rect',
   create: createRect,
 });
 
@@ -644,6 +653,6 @@ function resetGeometry(widget: Widget): void {
  */
 function onChildPropertyChanged(child: Widget): void {
   if (child.parent instanceof BoxPanel) {
-    postMessage(child.parent, Widget.MsgLayoutRequest);
+    postMessage(child.parent, Panel.MsgLayoutRequest);
   }
 }
