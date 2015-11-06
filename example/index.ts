@@ -38,7 +38,7 @@ function main(): void {
   BoxPanel.setStretch(yellow, 1);
 
   let panel = new BoxPanel();
-  panel.children = [red, green, blue, yellow];
+  panel.children.assign([red, green, blue, yellow]);
   panel.id = 'main';
 
   let refresh = () => {
