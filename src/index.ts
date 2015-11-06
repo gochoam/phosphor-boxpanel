@@ -87,7 +87,7 @@ enum Direction {
 
 
 /**
- * A widget which arranges its children in a single row or column.
+ * A panel which arranges its children in a single row or column.
  */
 export
 class BoxPanel extends Panel {
