@@ -8,12 +8,12 @@
 'use-strict';
 
 import {
-  BoxPanel
-} from '../lib/index';
-
-import {
   Widget
 } from 'phosphor-widget';
+
+import {
+  BoxPanel
+} from '../lib/index';
 
 import './index.css';
 
@@ -38,8 +38,8 @@ function main(): void {
   BoxPanel.setStretch(yellow, 1);
 
   let panel = new BoxPanel();
-  panel.children.assign([red, green, blue, yellow]);
   panel.id = 'main';
+  panel.children.assign([red, green, blue, yellow]);
 
   let refresh = () => {
     if (document.documentElement.offsetWidth < 600) {
