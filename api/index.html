@@ -68,7 +68,7 @@
 				<h1 id="phosphor-boxpanel">phosphor-boxpanel</h1>
 				<p><a href="https://travis-ci.org/phosphorjs/phosphor-boxpanel?branch=master"><img src="https://travis-ci.org/phosphorjs/phosphor-boxpanel.svg" alt="Build Status"></a>
 				<a href="https://coveralls.io/github/phosphorjs/phosphor-boxpanel?branch=master"><img src="https://coveralls.io/repos/phosphorjs/phosphor-boxpanel/badge.svg?branch=master&amp;service=github" alt="Coverage Status"></a></p>
-				<p>A Phosphor layout widget which arranges its children into a single row or column.</p>
+				<p>A Phosphor layout panel which arranges its children into a single row or column.</p>
 				<p><a href="http://phosphorjs.github.io/phosphor-boxpanel/api/">API Docs</a></p>
 				<h2 id="package-install">Package Install</h2>
 				<p><strong>Prerequisites</strong></p>
@@ -128,15 +128,19 @@ browserify myapp.js -o mybundle.js
 				<h2 id="usage-examples">Usage Examples</h2>
 				<p><strong>Note:</strong> This module is fully compatible with Node/Babel/ES6/ES5. Simply
 				omit the type declarations when using a language other than TypeScript.</p>
-				<pre><code class="lang-typescript"><span class="hljs-keyword">import</span> { BoxPanel } from <span class="hljs-string">'phosphor-boxpanel'</span>;
+				<pre><code class="lang-typescript"><span class="hljs-keyword">import</span> {
+  BoxPanel
+} from <span class="hljs-string">'phosphor-boxpanel'</span>;
 
-<span class="hljs-keyword">import</span> { Widget } from <span class="hljs-string">'phosphor-widget'</span>;
+<span class="hljs-keyword">import</span> {
+  Widget
+} from <span class="hljs-string">'phosphor-widget'</span>;
 
 
 <span class="hljs-comment">// Create some content for the panel.</span>
-<span class="hljs-keyword">var</span> w1 = <span class="hljs-keyword">new</span> Widget();
-<span class="hljs-keyword">var</span> w2 = <span class="hljs-keyword">new</span> Widget();
-<span class="hljs-keyword">var</span> w3 = <span class="hljs-keyword">new</span> Widget();
+<span class="hljs-keyword">let</span> w1 = <span class="hljs-keyword">new</span> Widget();
+<span class="hljs-keyword">let</span> w2 = <span class="hljs-keyword">new</span> Widget();
+<span class="hljs-keyword">let</span> w3 = <span class="hljs-keyword">new</span> Widget();
 
 <span class="hljs-comment">// Set the widget stretch factors (optional).</span>
 BoxPanel.setStretch(w1, <span class="hljs-number">0</span>);
@@ -149,10 +153,10 @@ BoxPanel.setSizeBasis(w2, <span class="hljs-number">650</span>);
 BoxPanel.setSizeBasis(w3, <span class="hljs-number">350</span>);
 
 <span class="hljs-comment">// Setup the box panel.</span>
-<span class="hljs-keyword">var</span> sp = <span class="hljs-keyword">new</span> BoxPanel();
-sp.direction = BoxPanel.LeftToRight;
-sp.spacing = <span class="hljs-number">5</span>;
-sp.children = [w1, w2, w3];
+<span class="hljs-keyword">let</span> panel = <span class="hljs-keyword">new</span> BoxPanel();
+panel.direction = BoxPanel.LeftToRight;
+panel.spacing = <span class="hljs-number">5</span>;
+panel.children.assign([w1, w2, w3]);
 </code></pre>
 			</div>
 		</div>
