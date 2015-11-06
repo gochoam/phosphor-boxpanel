@@ -4,7 +4,7 @@ phosphor-boxpanel
 [![Build Status](https://travis-ci.org/phosphorjs/phosphor-boxpanel.svg)](https://travis-ci.org/phosphorjs/phosphor-boxpanel?branch=master)
 [![Coverage Status](https://coveralls.io/repos/phosphorjs/phosphor-boxpanel/badge.svg?branch=master&service=github)](https://coveralls.io/github/phosphorjs/phosphor-boxpanel?branch=master)
 
-A Phosphor layout widget which arranges its children into a single row or column.
+A Phosphor layout panel which arranges its children into a single row or column.
 
 [API Docs](http://phosphorjs.github.io/phosphor-boxpanel/api/)
 
@@ -110,15 +110,19 @@ Usage Examples
 omit the type declarations when using a language other than TypeScript.
 
 ```typescript
-import { BoxPanel } from 'phosphor-boxpanel';
+import {
+  BoxPanel
+} from 'phosphor-boxpanel';
 
-import { Widget } from 'phosphor-widget';
+import {
+  Widget
+} from 'phosphor-widget';
 
 
 // Create some content for the panel.
-var w1 = new Widget();
-var w2 = new Widget();
-var w3 = new Widget();
+let w1 = new Widget();
+let w2 = new Widget();
+let w3 = new Widget();
 
 // Set the widget stretch factors (optional).
 BoxPanel.setStretch(w1, 0);
@@ -131,8 +135,8 @@ BoxPanel.setSizeBasis(w2, 650);
 BoxPanel.setSizeBasis(w3, 350);
 
 // Setup the box panel.
-var sp = new BoxPanel();
-sp.direction = BoxPanel.LeftToRight;
-sp.spacing = 5;
-sp.children = [w1, w2, w3];
+let panel = new BoxPanel();
+panel.direction = BoxPanel.LeftToRight;
+panel.spacing = 5;
+panel.children.assign([w1, w2, w3]);
 ```

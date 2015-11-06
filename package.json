@@ -1,16 +1,16 @@
 {
   "name": "phosphor-boxpanel",
   "version": "0.9.7",
-  "description": "A Phosphor layout widget which arranges its children into a single row or column.",
+  "description": "A Phosphor layout panel which arranges its children into a single row or column.",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "dependencies": {
     "phosphor-arrays": "^1.0.5",
-    "phosphor-boxengine": "^0.9.4",
-    "phosphor-domutil": "^0.9.5",
+    "phosphor-boxengine": "^1.0.1",
+    "phosphor-domutil": "^1.0.0",
     "phosphor-messaging": "^1.0.5",
-    "phosphor-properties": "^1.3.0",
-    "phosphor-widget": "^0.9.13"
+    "phosphor-properties": "^2.0.0",
+    "phosphor-widget": "^1.0.0-beta"
   },
   "devDependencies": {
     "browserify": "^11.0.1",
@@ -67,6 +67,7 @@
     "box",
     "boxlayout",
     "boxpanel",
+    "layout",
     "panel",
     "ui",
     "widget",
