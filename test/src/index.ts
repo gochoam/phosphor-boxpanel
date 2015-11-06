@@ -18,7 +18,7 @@ import {
 } from 'phosphor-properties';
 
 import {
-  ResizeMessage, Widget
+  Panel, ResizeMessage, Widget
 } from 'phosphor-widget';
 
 import {
@@ -90,6 +90,10 @@ describe('phosphor-boxpanel', () => {
         expect(BoxPanel.directionProperty instanceof Property).to.be(true);
       });
 
+      it('should have the name `direction`', () => {
+        expect(BoxPanel.directionProperty.name).to.be('direction');
+      });
+
       it('should default to `TopToBottom`', () => {
         let panel = new BoxPanel();
         let direction = BoxPanel.directionProperty.get(panel);
@@ -139,6 +143,10 @@ describe('phosphor-boxpanel', () => {
         expect(BoxPanel.spacingProperty instanceof Property).to.be(true);
       });
 
+      it('should have the name `spacing`', () => {
+        expect(BoxPanel.spacingProperty.name).to.be('spacing');
+      });
+
       it('should default to `8`', () => {
         let panel = new BoxPanel();
         expect(BoxPanel.spacingProperty.get(panel)).to.be(8);
@@ -175,6 +183,10 @@ describe('phosphor-boxpanel', () => {
         expect(BoxPanel.stretchProperty instanceof Property).to.be(true);
       });
 
+      it('should have the name `stretch`', () => {
+        expect(BoxPanel.stretchProperty.name).to.be('stretch');
+      });
+
       it('should default to `0`', () => {
         let widget = new Widget();
         expect(BoxPanel.stretchProperty.get(widget)).to.be(0);
@@ -197,7 +209,7 @@ describe('phosphor-boxpanel', () => {
         let child0 = new Widget();
         let child1 = new Widget();
         Widget.attach(panel, document.body);
-        panel.children = [child0, child1];
+        panel.children.assign([child0, child1]);
         clearMessageData(panel);
         BoxPanel.stretchProperty.set(child0, 4);
         requestAnimationFrame(() => {
@@ -212,6 +224,10 @@ describe('phosphor-boxpanel', () => {
 
       it('should be a property descriptor', () => {
         expect(BoxPanel.sizeBasisProperty instanceof Property).to.be(true);
+      });
+
+      it('should have the name `sizeBasis`', () => {
+        expect(BoxPanel.sizeBasisProperty.name).to.be('sizeBasis');
       });
 
       it('should default to `0`', () => {
@@ -236,7 +252,7 @@ describe('phosphor-boxpanel', () => {
         let child0 = new Widget();
         let child1 = new Widget();
         Widget.attach(panel, document.body);
-        panel.children = [child0, child1];
+        panel.children.assign([child0, child1]);
         clearMessageData(panel);
         BoxPanel.sizeBasisProperty.set(child0, 4);
         requestAnimationFrame(() => {
@@ -328,7 +344,7 @@ describe('phosphor-boxpanel', () => {
 
       it('should dispose of the resources held by the panel', () => {
         let panel = new BoxPanel();
-        panel.children = [new Widget(), new Widget()];
+        panel.children.assign([new Widget(), new Widget()]);
         panel.dispose();
         expect(panel.isDisposed).to.be(true);
         expect(panel.children.length).to.be(0);
@@ -391,7 +407,7 @@ describe('phosphor-boxpanel', () => {
         let widget = new Widget();
         Widget.attach(panel, document.body);
         expect(panel.messages.indexOf('child-added')).to.be(-1);
-        panel.children = [widget];
+        panel.children.assign([widget]);
         expect(panel.messages.indexOf('child-added')).to.not.be(-1);
       });
 
@@ -400,7 +416,7 @@ describe('phosphor-boxpanel', () => {
         let widget = new LogWidget();
         Widget.attach(panel, document.body);
         expect(widget.messages.indexOf('after-attach')).to.be(-1);
-        panel.children = [widget];
+        panel.children.assign([widget]);
         expect(widget.messages.indexOf('after-attach')).to.not.be(-1);
       });
 
@@ -409,7 +425,7 @@ describe('phosphor-boxpanel', () => {
         let widget = new Widget();
         Widget.attach(panel, document.body);
         clearMessageData(panel);
-        panel.children = [widget];
+        panel.children.assign([widget]);
         expect(panel.messages.indexOf('layout-request')).to.be(-1);
         requestAnimationFrame(() => {
           expect(panel.messages.indexOf('layout-request')).to.not.be(-1);
@@ -425,9 +441,9 @@ describe('phosphor-boxpanel', () => {
         let panel = new LogPanel();
         let widget = new Widget();
         Widget.attach(panel, document.body);
-        panel.children = [widget];
+        panel.children.assign([widget]);
         expect(panel.messages.indexOf('child-removed')).to.be(-1);
-        panel.children = [];
+        panel.children.assign([]);
         expect(panel.messages.indexOf('child-removed')).to.not.be(-1);
       });
 
@@ -435,9 +451,9 @@ describe('phosphor-boxpanel', () => {
         let panel = new LogPanel();
         let widget = new LogWidget();
         Widget.attach(panel, document.body);
-        panel.children = [widget];
+        panel.children.assign([widget]);
         expect(widget.messages.indexOf('before-detach')).to.be(-1);
-        panel.children = [];
+        panel.children.assign([]);
         expect(widget.messages.indexOf('before-detach')).to.not.be(-1);
       });
 
@@ -445,9 +461,9 @@ describe('phosphor-boxpanel', () => {
         let panel = new LogPanel();
         let widget = new Widget();
         Widget.attach(panel, document.body);
-        panel.children = [widget];
+        panel.children.assign([widget]);
         clearMessageData(panel);
-        panel.children = [];
+        panel.children.assign([]);
         expect(panel.messages.indexOf('layout-request')).to.be(-1);
         requestAnimationFrame(() => {
           expect(panel.messages.indexOf('layout-request')).to.not.be(-1);
@@ -464,9 +480,9 @@ describe('phosphor-boxpanel', () => {
         let widget0 = new Widget();
         let widget1 = new Widget();
         Widget.attach(panel, document.body);
-        panel.children = [widget0, widget1];
+        panel.children.assign([widget0, widget1]);
         expect(panel.messages.indexOf('child-moved')).to.be(-1);
-        panel.moveChild(1, 0);
+        panel.children.move(1, 0);
         expect(panel.messages.indexOf('child-moved')).to.not.be(-1);
       });
 
@@ -475,9 +491,9 @@ describe('phosphor-boxpanel', () => {
         let widget0 = new Widget();
         let widget1 = new Widget();
         Widget.attach(panel, document.body);
-        panel.children = [widget0, widget1];
+        panel.children.assign([widget0, widget1]);
         clearMessageData(panel);
-        panel.moveChild(1, 0);
+        panel.children.move(1, 0);
         expect(panel.messages.indexOf('update-request')).to.be(-1);
         requestAnimationFrame(() => {
           expect(panel.messages.indexOf('update-request')).to.not.be(-1);
@@ -536,7 +552,7 @@ describe('phosphor-boxpanel', () => {
         let panel = new LogPanel();
         let widget = new Widget();
         widget.hidden = true;
-        panel.children = [widget];
+        panel.children.assign([widget]);
         Widget.attach(panel, document.body);
         expect(panel.messages.indexOf('child-shown')).to.be(-1);
         widget.hidden = false;
@@ -547,7 +563,7 @@ describe('phosphor-boxpanel', () => {
         let panel = new LogPanel();
         let widget = new Widget();
         widget.hidden = true;
-        panel.children = [widget];
+        panel.children.assign([widget]);
         Widget.attach(panel, document.body);
         clearMessageData(panel);
         widget.hidden = false;
@@ -565,7 +581,7 @@ describe('phosphor-boxpanel', () => {
       it('should be invoked when a child is hidden', () => {
         let panel = new LogPanel();
         let widget = new Widget();
-        panel.children = [widget];
+        panel.children.assign([widget]);
         Widget.attach(panel, document.body);
         expect(panel.messages.indexOf('child-hidden')).to.be(-1);
         widget.hidden = true;
@@ -575,7 +591,7 @@ describe('phosphor-boxpanel', () => {
       it('should post a `layout-request`', (done) => {
         let panel = new LogPanel();
         let widget = new Widget();
-        panel.children = [widget];
+        panel.children.assign([widget]);
         Widget.attach(panel, document.body);
         clearMessageData(panel);
         widget.hidden = true;
@@ -609,14 +625,14 @@ describe('phosphor-boxpanel', () => {
         let panel = new BoxPanel();
         let child0 = new Widget();
         let child1 = new Widget();
-        panel.children = [child0, child1];
+        panel.children.assign([child0, child1]);
         Widget.attach(panel, document.body);
         panel.node.style.position = 'absolute';
         panel.node.style.top = '0px';
         panel.node.style.left = '0px';
         panel.node.style.width = '0px';
         panel.node.style.height = '0px';
-        sendMessage(panel, Widget.MsgLayoutRequest);
+        sendMessage(panel, Panel.MsgLayoutRequest);
         panel.node.style.width = '100px';
         panel.node.style.height = '100px';
         sendMessage(panel, new ResizeMessage(100, 100));
@@ -636,7 +652,7 @@ describe('phosphor-boxpanel', () => {
 
       it('should be invoked on an `update-request` message', () => {
         let panel = new LogPanel();
-        panel.update(true);
+        sendMessage(panel, Widget.MsgUpdateRequest);
         expect(panel.messages.indexOf('update-request')).to.not.be(-1);
       });
 
@@ -644,17 +660,17 @@ describe('phosphor-boxpanel', () => {
         let panel = new BoxPanel();
         let child0 = new Widget();
         let child1 = new Widget();
-        panel.children = [child0, child1];
+        panel.children.assign([child0, child1]);
         Widget.attach(panel, document.body);
         panel.node.style.position = 'absolute';
         panel.node.style.top = '0px';
         panel.node.style.left = '0px';
         panel.node.style.width = '0px';
         panel.node.style.height = '0px';
-        sendMessage(panel, Widget.MsgLayoutRequest);
+        sendMessage(panel, Panel.MsgLayoutRequest);
         panel.node.style.width = '200px';
         panel.node.style.height = '200px';
-        panel.update(true);
+        sendMessage(panel, Widget.MsgUpdateRequest);
         expect(child0.node.offsetTop).to.be(0);
         expect(child0.node.offsetLeft).to.be(0);
         expect(child0.node.offsetWidth).to.be(200);
@@ -671,7 +687,7 @@ describe('phosphor-boxpanel', () => {
 
       it('should be invoked on a `layout-request` message', () => {
         let panel = new LogPanel();
-        sendMessage(panel, Widget.MsgLayoutRequest);
+        sendMessage(panel, Panel.MsgLayoutRequest);
         expect(panel.messages.indexOf('layout-request')).to.not.be(-1);
       });
 
@@ -683,7 +699,7 @@ describe('phosphor-boxpanel', () => {
         clearMessageData(panel1);
         clearMessageData(panel2);
         expect(panel1.messages.indexOf('layout-request')).to.be(-1);
-        sendMessage(panel2, Widget.MsgLayoutRequest);
+        sendMessage(panel2, Panel.MsgLayoutRequest);
         expect(panel1.messages.indexOf('layout-request')).to.not.be(-1);
       });
 
@@ -692,11 +708,11 @@ describe('phosphor-boxpanel', () => {
         let child = new Widget();
         child.node.style.minWidth = '50px';
         child.node.style.minHeight = '50px';
-        panel.children = [child];
+        panel.children.assign([child]);
         Widget.attach(panel, document.body);
         expect(panel.node.style.minWidth).to.be('');
         expect(panel.node.style.minHeight).to.be('');
-        sendMessage(panel, Widget.MsgLayoutRequest);
+        sendMessage(panel, Panel.MsgLayoutRequest);
         expect(panel.node.style.minWidth).to.be('50px');
         expect(panel.node.style.minHeight).to.be('50px');
       });
@@ -714,14 +730,14 @@ describe('phosphor-boxpanel', () => {
         panel.direction = Direction.LeftToRight;
         child0.node.style.minWidth = '30px';
         child1.node.style.minHeight = '50px';
-        panel.children = [child0, child1, child2];
+        panel.children.assign([child0, child1, child2]);
         Widget.attach(panel, document.body);
         panel.node.style.position = 'absolute';
         panel.node.style.top = '0px';
         panel.node.style.left = '0px';
         panel.node.style.width = '50px';
         panel.node.style.height = '100px';
-        sendMessage(panel, Widget.MsgLayoutRequest);
+        sendMessage(panel, Panel.MsgLayoutRequest);
         expect(child0.node.offsetTop).to.be(0);
         expect(child0.node.offsetLeft).to.be(0);
         expect(child0.node.offsetWidth).to.be(36);
@@ -743,14 +759,14 @@ describe('phosphor-boxpanel', () => {
         panel.direction = Direction.RightToLeft;
         child0.node.style.minWidth = '30px';
         child1.node.style.minHeight = '50px';
-        panel.children = [child0, child1, child2];
+        panel.children.assign([child0, child1, child2]);
         Widget.attach(panel, document.body);
         panel.node.style.position = 'absolute';
         panel.node.style.top = '0px';
         panel.node.style.left = '0px';
         panel.node.style.width = '50px';
         panel.node.style.height = '100px';
-        sendMessage(panel, Widget.MsgLayoutRequest);
+        sendMessage(panel, Panel.MsgLayoutRequest);
         expect(child0.node.offsetTop).to.be(0);
         expect(child0.node.offsetLeft).to.be(14);
         expect(child0.node.offsetWidth).to.be(36);
@@ -772,14 +788,14 @@ describe('phosphor-boxpanel', () => {
         panel.direction = Direction.TopToBottom;
         child0.node.style.minWidth = '30px';
         child1.node.style.minHeight = '50px';
-        panel.children = [child0, child1, child2];
+        panel.children.assign([child0, child1, child2]);
         Widget.attach(panel, document.body);
         panel.node.style.position = 'absolute';
         panel.node.style.top = '0px';
         panel.node.style.left = '0px';
         panel.node.style.width = '100px';
         panel.node.style.height = '70px';
-        sendMessage(panel, Widget.MsgLayoutRequest);
+        sendMessage(panel, Panel.MsgLayoutRequest);
         expect(child0.node.offsetTop).to.be(0);
         expect(child0.node.offsetLeft).to.be(0);
         expect(child0.node.offsetWidth).to.be(100);
@@ -801,14 +817,14 @@ describe('phosphor-boxpanel', () => {
         panel.direction = Direction.BottomToTop;
         child0.node.style.minWidth = '30px';
         child1.node.style.minHeight = '50px';
-        panel.children = [child0, child1, child2];
+        panel.children.assign([child0, child1, child2]);
         Widget.attach(panel, document.body);
         panel.node.style.position = 'absolute';
         panel.node.style.top = '0px';
         panel.node.style.left = '0px';
         panel.node.style.width = '100px';
         panel.node.style.height = '70px';
-        sendMessage(panel, Widget.MsgLayoutRequest);
+        sendMessage(panel, Panel.MsgLayoutRequest);
         expect(child0.node.offsetTop).to.be(64);
         expect(child0.node.offsetLeft).to.be(0);
         expect(child0.node.offsetWidth).to.be(100);
