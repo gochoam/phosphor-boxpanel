@@ -18,7 +18,7 @@ import {
 } from 'phosphor-properties';
 
 import {
-  Panel, ResizeMessage, Widget
+  ResizeMessage, Widget
 } from 'phosphor-widget';
 
 import {
@@ -126,11 +126,12 @@ describe('phosphor-boxpanel', () => {
 
       it('should post a `layout-request`', (done) => {
         let panel = new LogPanel();
-        Widget.attach(panel, document.body);
+        panel.attach(document.body);
         clearMessageData(panel);
         BoxPanel.directionProperty.set(panel, Direction.BottomToTop);
         requestAnimationFrame(() => {
           expect(panel.messages.indexOf('layout-request')).to.not.be(-1);
+          panel.dispose();
           done();
         });
       });
@@ -166,11 +167,12 @@ describe('phosphor-boxpanel', () => {
 
       it('should post a `layout-request`', (done) => {
         let panel = new LogPanel();
-        Widget.attach(panel, document.body);
+        panel.attach(document.body);
         clearMessageData(panel);
         BoxPanel.spacingProperty.set(panel, 4);
         requestAnimationFrame(() => {
           expect(panel.messages.indexOf('layout-request')).to.not.be(-1);
+          panel.dispose();
           done();
         });
       });
@@ -208,12 +210,14 @@ describe('phosphor-boxpanel', () => {
         let panel = new LogPanel();
         let child0 = new Widget();
         let child1 = new Widget();
-        Widget.attach(panel, document.body);
-        panel.children.assign([child0, child1]);
+        panel.attach(document.body);
+        panel.addChild(child0);
+        panel.addChild(child1);
         clearMessageData(panel);
         BoxPanel.stretchProperty.set(child0, 4);
         requestAnimationFrame(() => {
           expect(panel.messages.indexOf('layout-request')).to.not.be(-1);
+          panel.dispose();
           done();
         });
       });
@@ -251,12 +255,14 @@ describe('phosphor-boxpanel', () => {
         let panel = new LogPanel();
         let child0 = new Widget();
         let child1 = new Widget();
-        Widget.attach(panel, document.body);
-        panel.children.assign([child0, child1]);
+        panel.attach(document.body);
+        panel.addChild(child0);
+        panel.addChild(child1);
         clearMessageData(panel);
         BoxPanel.sizeBasisProperty.set(child0, 4);
         requestAnimationFrame(() => {
           expect(panel.messages.indexOf('layout-request')).to.not.be(-1);
+          panel.dispose();
           done();
         });
       });
@@ -344,10 +350,11 @@ describe('phosphor-boxpanel', () => {
 
       it('should dispose of the resources held by the panel', () => {
         let panel = new BoxPanel();
-        panel.children.assign([new Widget(), new Widget()]);
+        panel.addChild(new Widget());
+        panel.addChild(new Widget());
         panel.dispose();
         expect(panel.isDisposed).to.be(true);
-        expect(panel.children.length).to.be(0);
+        expect(panel.childCount()).to.be(0);
       });
 
     });
@@ -405,30 +412,33 @@ describe('phosphor-boxpanel', () => {
       it('should be invoked when a child is added', () => {
         let panel = new LogPanel();
         let widget = new Widget();
-        Widget.attach(panel, document.body);
+        panel.attach(document.body);
         expect(panel.messages.indexOf('child-added')).to.be(-1);
-        panel.children.assign([widget]);
+        panel.addChild(widget);
         expect(panel.messages.indexOf('child-added')).to.not.be(-1);
+        panel.dispose();
       });
 
       it('should send `after-attach` to the child', () => {
         let panel = new LogPanel();
         let widget = new LogWidget();
-        Widget.attach(panel, document.body);
+        panel.attach(document.body);
         expect(widget.messages.indexOf('after-attach')).to.be(-1);
-        panel.children.assign([widget]);
+        panel.addChild(widget);
         expect(widget.messages.indexOf('after-attach')).to.not.be(-1);
+        panel.dispose();
       });
 
       it('should post a `layout-request`', (done) => {
         let panel = new LogPanel();
         let widget = new Widget();
-        Widget.attach(panel, document.body);
+        panel.attach(document.body);
         clearMessageData(panel);
-        panel.children.assign([widget]);
+        panel.addChild(widget);
         expect(panel.messages.indexOf('layout-request')).to.be(-1);
         requestAnimationFrame(() => {
           expect(panel.messages.indexOf('layout-request')).to.not.be(-1);
+          panel.dispose();
           done();
         });
       });
@@ -440,33 +450,36 @@ describe('phosphor-boxpanel', () => {
       it('should be invoked when a child is removed', () => {
         let panel = new LogPanel();
         let widget = new Widget();
-        Widget.attach(panel, document.body);
-        panel.children.assign([widget]);
+        panel.attach(document.body);
+        panel.addChild(widget);
         expect(panel.messages.indexOf('child-removed')).to.be(-1);
-        panel.children.assign([]);
+        widget.remove();
         expect(panel.messages.indexOf('child-removed')).to.not.be(-1);
+        panel.dispose();
       });
 
       it('should send `before-detach` to the child', () => {
         let panel = new LogPanel();
         let widget = new LogWidget();
-        Widget.attach(panel, document.body);
-        panel.children.assign([widget]);
+        panel.attach(document.body);
+        panel.addChild(widget);
         expect(widget.messages.indexOf('before-detach')).to.be(-1);
-        panel.children.assign([]);
+        widget.remove();
         expect(widget.messages.indexOf('before-detach')).to.not.be(-1);
+        panel.dispose();
       });
 
       it('should post a `layout-request`', (done) => {
         let panel = new LogPanel();
         let widget = new Widget();
-        Widget.attach(panel, document.body);
-        panel.children.assign([widget]);
+        panel.attach(document.body);
+        panel.addChild(widget);
         clearMessageData(panel);
-        panel.children.assign([]);
+        widget.remove();
         expect(panel.messages.indexOf('layout-request')).to.be(-1);
         requestAnimationFrame(() => {
           expect(panel.messages.indexOf('layout-request')).to.not.be(-1);
+          panel.dispose();
           done();
         });
       });
@@ -479,24 +492,28 @@ describe('phosphor-boxpanel', () => {
         let panel = new LogPanel();
         let widget0 = new Widget();
         let widget1 = new Widget();
-        Widget.attach(panel, document.body);
-        panel.children.assign([widget0, widget1]);
+        panel.attach(document.body);
+        panel.addChild(widget0);
+        panel.addChild(widget1);
         expect(panel.messages.indexOf('child-moved')).to.be(-1);
-        panel.children.move(1, 0);
+        panel.addChild(widget0);
         expect(panel.messages.indexOf('child-moved')).to.not.be(-1);
+        panel.dispose();
       });
 
       it('should post an `update-request`', (done) => {
         let panel = new LogPanel();
         let widget0 = new Widget();
         let widget1 = new Widget();
-        Widget.attach(panel, document.body);
-        panel.children.assign([widget0, widget1]);
+        panel.attach(document.body);
+        panel.addChild(widget0);
+        panel.addChild(widget1);
         clearMessageData(panel);
-        panel.children.move(1, 0);
+        panel.addChild(widget0);
         expect(panel.messages.indexOf('update-request')).to.be(-1);
         requestAnimationFrame(() => {
           expect(panel.messages.indexOf('update-request')).to.not.be(-1);
+          panel.dispose();
           done();
         });
       });
@@ -507,21 +524,23 @@ describe('phosphor-boxpanel', () => {
 
       it('should be invoked when the panel is shown', () => {
         let panel = new LogPanel();
-        Widget.attach(panel, document.body);
+        panel.attach(document.body);
         panel.hidden = true;
         expect(panel.messages.indexOf('after-show')).to.be(-1);
         panel.hidden = false;
         expect(panel.messages.indexOf('after-show')).to.not.be(-1);
+        panel.dispose();
       });
 
       it('should send an `update-request`', () => {
         let panel = new LogPanel();
-        Widget.attach(panel, document.body);
+        panel.attach(document.body);
         clearMessageData(panel);
         panel.hidden = true;
         expect(panel.messages.indexOf('update-request')).to.be(-1);
         panel.hidden = false;
         expect(panel.messages.indexOf('update-request')).to.not.be(-1);
+        panel.dispose();
       });
 
     });
@@ -530,16 +549,18 @@ describe('phosphor-boxpanel', () => {
 
       it('should be invoked when the panel is attached', () => {
         let panel = new LogPanel();
-        Widget.attach(panel, document.body);
+        panel.attach(document.body);
         expect(panel.messages.indexOf('after-attach')).to.not.be(-1);
+        panel.dispose();
       });
 
       it('post a `layout-request`', (done) => {
         let panel = new LogPanel();
-        Widget.attach(panel, document.body);
+        panel.attach(document.body);
         expect(panel.messages.indexOf('layout-request')).to.be(-1);
         requestAnimationFrame(() => {
           expect(panel.messages.indexOf('layout-request')).to.not.be(-1);
+          panel.dispose();
           done();
         });
       });
@@ -552,24 +573,26 @@ describe('phosphor-boxpanel', () => {
         let panel = new LogPanel();
         let widget = new Widget();
         widget.hidden = true;
-        panel.children.assign([widget]);
-        Widget.attach(panel, document.body);
+        panel.addChild(widget);
+        panel.attach(document.body)
         expect(panel.messages.indexOf('child-shown')).to.be(-1);
         widget.hidden = false;
         expect(panel.messages.indexOf('child-shown')).to.not.be(-1);
+        panel.dispose();
       });
 
       it('should post a `layout-request`', (done) => {
         let panel = new LogPanel();
         let widget = new Widget();
         widget.hidden = true;
-        panel.children.assign([widget]);
-        Widget.attach(panel, document.body);
+        panel.addChild(widget);
+        panel.attach(document.body)
         clearMessageData(panel);
         widget.hidden = false;
         expect(panel.messages.indexOf('layout-request')).to.be(-1);
         requestAnimationFrame(() => {
           expect(panel.messages.indexOf('layout-request')).to.not.be(-1);
+          panel.dispose();
           done();
         });
       });
@@ -581,23 +604,25 @@ describe('phosphor-boxpanel', () => {
       it('should be invoked when a child is hidden', () => {
         let panel = new LogPanel();
         let widget = new Widget();
-        panel.children.assign([widget]);
-        Widget.attach(panel, document.body);
+        panel.addChild(widget);
+        panel.attach(document.body);
         expect(panel.messages.indexOf('child-hidden')).to.be(-1);
         widget.hidden = true;
         expect(panel.messages.indexOf('child-hidden')).to.not.be(-1);
+        panel.dispose();
       });
 
       it('should post a `layout-request`', (done) => {
         let panel = new LogPanel();
         let widget = new Widget();
-        panel.children.assign([widget]);
-        Widget.attach(panel, document.body);
+        panel.addChild(widget);
+        panel.attach(document.body);
         clearMessageData(panel);
         widget.hidden = true;
         expect(panel.messages.indexOf('layout-request')).to.be(-1);
         requestAnimationFrame(() => {
           expect(panel.messages.indexOf('layout-request')).to.not.be(-1);
+          panel.dispose();
           done();
         });
       });
@@ -609,30 +634,33 @@ describe('phosphor-boxpanel', () => {
       it('should be invoked on a `resize` message', () => {
         let panel = new LogPanel();
         let message = new ResizeMessage(100, 100);
-        Widget.attach(panel, document.body);
+        panel.attach(document.body);
         sendMessage(panel, message);
         expect(panel.messages.indexOf('resize')).to.not.be(-1);
+        panel.dispose();
       });
 
       it('should handle an unknown size', () => {
         let panel = new LogPanel();
-        Widget.attach(panel, document.body);
+        panel.attach(document.body);
         sendMessage(panel, ResizeMessage.UnknownSize);
         expect(panel.messages.indexOf('resize')).to.not.be(-1);
+        panel.dispose();
       });
 
       it('should resize the children', () => {
         let panel = new BoxPanel();
         let child0 = new Widget();
         let child1 = new Widget();
-        panel.children.assign([child0, child1]);
-        Widget.attach(panel, document.body);
+        panel.addChild(child0);
+        panel.addChild(child1);
+        panel.attach(document.body);
         panel.node.style.position = 'absolute';
         panel.node.style.top = '0px';
         panel.node.style.left = '0px';
         panel.node.style.width = '0px';
         panel.node.style.height = '0px';
-        sendMessage(panel, Panel.MsgLayoutRequest);
+        sendMessage(panel, Widget.MsgLayoutRequest);
         panel.node.style.width = '100px';
         panel.node.style.height = '100px';
         sendMessage(panel, new ResizeMessage(100, 100));
@@ -644,6 +672,7 @@ describe('phosphor-boxpanel', () => {
         expect(child1.node.offsetLeft).to.be(0);
         expect(child1.node.offsetWidth).to.be(100);
         expect(child1.node.offsetHeight).to.be(46);
+        panel.dispose();
       });
 
     });
@@ -660,14 +689,15 @@ describe('phosphor-boxpanel', () => {
         let panel = new BoxPanel();
         let child0 = new Widget();
         let child1 = new Widget();
-        panel.children.assign([child0, child1]);
-        Widget.attach(panel, document.body);
+        panel.addChild(child0);
+        panel.addChild(child1);
+        panel.attach(document.body);
         panel.node.style.position = 'absolute';
         panel.node.style.top = '0px';
         panel.node.style.left = '0px';
         panel.node.style.width = '0px';
         panel.node.style.height = '0px';
-        sendMessage(panel, Panel.MsgLayoutRequest);
+        sendMessage(panel, Widget.MsgLayoutRequest);
         panel.node.style.width = '200px';
         panel.node.style.height = '200px';
         sendMessage(panel, Widget.MsgUpdateRequest);
@@ -679,6 +709,7 @@ describe('phosphor-boxpanel', () => {
         expect(child1.node.offsetLeft).to.be(0);
         expect(child1.node.offsetWidth).to.be(200);
         expect(child1.node.offsetHeight).to.be(96);
+        panel.dispose();
       });
 
     });
@@ -687,20 +718,21 @@ describe('phosphor-boxpanel', () => {
 
       it('should be invoked on a `layout-request` message', () => {
         let panel = new LogPanel();
-        sendMessage(panel, Panel.MsgLayoutRequest);
+        sendMessage(panel, Widget.MsgLayoutRequest);
         expect(panel.messages.indexOf('layout-request')).to.not.be(-1);
       });
 
       it('should send a `layout-request` to its parent', () => {
         let panel1 = new LogPanel();
         let panel2 = new LogPanel();
-        panel2.parent = panel1;
-        Widget.attach(panel1, document.body);
+        panel1.addChild(panel2);
+        panel1.attach(document.body);
         clearMessageData(panel1);
         clearMessageData(panel2);
         expect(panel1.messages.indexOf('layout-request')).to.be(-1);
-        sendMessage(panel2, Panel.MsgLayoutRequest);
+        sendMessage(panel2, Widget.MsgLayoutRequest);
         expect(panel1.messages.indexOf('layout-request')).to.not.be(-1);
+        panel1.dispose();
       });
 
       it('should setup the geometry of the panel', () => {
@@ -708,13 +740,14 @@ describe('phosphor-boxpanel', () => {
         let child = new Widget();
         child.node.style.minWidth = '50px';
         child.node.style.minHeight = '50px';
-        panel.children.assign([child]);
-        Widget.attach(panel, document.body);
+        panel.addChild(child);
+        panel.attach(document.body);
         expect(panel.node.style.minWidth).to.be('');
         expect(panel.node.style.minHeight).to.be('');
-        sendMessage(panel, Panel.MsgLayoutRequest);
+        sendMessage(panel, Widget.MsgLayoutRequest);
         expect(panel.node.style.minWidth).to.be('50px');
         expect(panel.node.style.minHeight).to.be('50px');
+        panel.dispose();
       });
 
     });
@@ -730,14 +763,16 @@ describe('phosphor-boxpanel', () => {
         panel.direction = Direction.LeftToRight;
         child0.node.style.minWidth = '30px';
         child1.node.style.minHeight = '50px';
-        panel.children.assign([child0, child1, child2]);
-        Widget.attach(panel, document.body);
+        panel.addChild(child0);
+        panel.addChild(child1);
+        panel.addChild(child2);
+        panel.attach(document.body);
         panel.node.style.position = 'absolute';
         panel.node.style.top = '0px';
         panel.node.style.left = '0px';
         panel.node.style.width = '50px';
         panel.node.style.height = '100px';
-        sendMessage(panel, Panel.MsgLayoutRequest);
+        sendMessage(panel, Widget.MsgLayoutRequest);
         expect(child0.node.offsetTop).to.be(0);
         expect(child0.node.offsetLeft).to.be(0);
         expect(child0.node.offsetWidth).to.be(36);
@@ -748,6 +783,7 @@ describe('phosphor-boxpanel', () => {
         expect(child1.node.offsetHeight).to.be(100);
         expect(panel.node.style.minWidth).to.be('38px');
         expect(panel.node.style.minHeight).to.be('50px');
+        panel.dispose();
       });
 
       it('should handle `right-to-left`', () => {
@@ -759,14 +795,16 @@ describe('phosphor-boxpanel', () => {
         panel.direction = Direction.RightToLeft;
         child0.node.style.minWidth = '30px';
         child1.node.style.minHeight = '50px';
-        panel.children.assign([child0, child1, child2]);
-        Widget.attach(panel, document.body);
+        panel.addChild(child0);
+        panel.addChild(child1);
+        panel.addChild(child2);
+        panel.attach(document.body);
         panel.node.style.position = 'absolute';
         panel.node.style.top = '0px';
         panel.node.style.left = '0px';
         panel.node.style.width = '50px';
         panel.node.style.height = '100px';
-        sendMessage(panel, Panel.MsgLayoutRequest);
+        sendMessage(panel, Widget.MsgLayoutRequest);
         expect(child0.node.offsetTop).to.be(0);
         expect(child0.node.offsetLeft).to.be(14);
         expect(child0.node.offsetWidth).to.be(36);
@@ -777,6 +815,7 @@ describe('phosphor-boxpanel', () => {
         expect(child1.node.offsetHeight).to.be(100);
         expect(panel.node.style.minWidth).to.be('38px');
         expect(panel.node.style.minHeight).to.be('50px');
+        panel.dispose();
       });
 
       it('should handle `top-to-bottom`', () => {
@@ -788,14 +827,16 @@ describe('phosphor-boxpanel', () => {
         panel.direction = Direction.TopToBottom;
         child0.node.style.minWidth = '30px';
         child1.node.style.minHeight = '50px';
-        panel.children.assign([child0, child1, child2]);
-        Widget.attach(panel, document.body);
+        panel.addChild(child0);
+        panel.addChild(child1);
+        panel.addChild(child2);
+        panel.attach(document.body);
         panel.node.style.position = 'absolute';
         panel.node.style.top = '0px';
         panel.node.style.left = '0px';
         panel.node.style.width = '100px';
         panel.node.style.height = '70px';
-        sendMessage(panel, Panel.MsgLayoutRequest);
+        sendMessage(panel, Widget.MsgLayoutRequest);
         expect(child0.node.offsetTop).to.be(0);
         expect(child0.node.offsetLeft).to.be(0);
         expect(child0.node.offsetWidth).to.be(100);
@@ -806,6 +847,7 @@ describe('phosphor-boxpanel', () => {
         expect(child1.node.offsetHeight).to.be(56);
         expect(panel.node.style.minWidth).to.be('30px');
         expect(panel.node.style.minHeight).to.be('58px');
+        panel.dispose();
       });
 
       it('should handle `bottom-to-top`', () => {
@@ -817,14 +859,16 @@ describe('phosphor-boxpanel', () => {
         panel.direction = Direction.BottomToTop;
         child0.node.style.minWidth = '30px';
         child1.node.style.minHeight = '50px';
-        panel.children.assign([child0, child1, child2]);
-        Widget.attach(panel, document.body);
+        panel.addChild(child0);
+        panel.addChild(child1);
+        panel.addChild(child2);
+        panel.attach(document.body);
         panel.node.style.position = 'absolute';
         panel.node.style.top = '0px';
         panel.node.style.left = '0px';
         panel.node.style.width = '100px';
         panel.node.style.height = '70px';
-        sendMessage(panel, Panel.MsgLayoutRequest);
+        sendMessage(panel, Widget.MsgLayoutRequest);
         expect(child0.node.offsetTop).to.be(64);
         expect(child0.node.offsetLeft).to.be(0);
         expect(child0.node.offsetWidth).to.be(100);
@@ -835,6 +879,7 @@ describe('phosphor-boxpanel', () => {
         expect(child1.node.offsetHeight).to.be(56);
         expect(panel.node.style.minWidth).to.be('30px');
         expect(panel.node.style.minHeight).to.be('58px');
+        panel.dispose();
       });
 
     });
