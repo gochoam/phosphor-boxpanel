@@ -138,5 +138,7 @@ BoxPanel.setSizeBasis(w3, 350);
 let panel = new BoxPanel();
 panel.direction = BoxPanel.LeftToRight;
 panel.spacing = 5;
-panel.children.assign([w1, w2, w3]);
+panel.addChild(w1);
+panel.addChild(w2);
+panel.addChild(w3);
 ```
