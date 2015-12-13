@@ -39,7 +39,10 @@ function main(): void {
 
   let panel = new BoxPanel();
   panel.id = 'main';
-  panel.children.assign([red, green, blue, yellow]);
+  panel.addChild(red);
+  panel.addChild(green);
+  panel.addChild(blue);
+  panel.addChild(yellow);
 
   let refresh = () => {
     if (document.documentElement.offsetWidth < 600) {
@@ -50,7 +53,7 @@ function main(): void {
     panel.update();
   };
 
-  Widget.attach(panel, document.body);
+  panel.attach(document.body);
 
   refresh();
 
