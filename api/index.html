@@ -156,7 +156,9 @@ BoxPanel.setSizeBasis(w3, <span class="hljs-number">350</span>);
 <span class="hljs-keyword">let</span> panel = <span class="hljs-keyword">new</span> BoxPanel();
 panel.direction = BoxPanel.LeftToRight;
 panel.spacing = <span class="hljs-number">5</span>;
-panel.children.assign([w1, w2, w3]);
+panel.addChild(w1);
+panel.addChild(w2);
+panel.addChild(w3);
 </code></pre>
 			</div>
 		</div>
