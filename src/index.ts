@@ -334,6 +334,8 @@ class BoxLayout extends PanelLayout {
    * A message handler invoked on a `'child-shown'` message.
    */
   protected onChildShown(msg: ChildMessage): void {
+    // IE paints before firing animation frame callbacks when toggling
+    // `display: none`. This causes flicker, so IE is fit immediately.
     if (BoxLayoutPrivate.IsIE) {
       sendMessage(this.parent, Widget.MsgFitRequest);
     } else {
@@ -345,6 +347,8 @@ class BoxLayout extends PanelLayout {
    * A message handler invoked on a `'child-hidden'` message.
    */
   protected onChildHidden(msg: ChildMessage): void {
+    // IE paints before firing animation frame callbacks when toggling
+    // `display: none`. This causes flicker, so IE is fit immediately.
     if (BoxLayoutPrivate.IsIE) {
       sendMessage(this.parent, Widget.MsgFitRequest);
     } else {
