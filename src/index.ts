@@ -561,7 +561,7 @@ namespace BoxLayoutPrivate {
   }
 
   /**
-   * Fit the layout to total size required by the child widgets.
+   * Fit the layout to the total size required by the child widgets.
    */
   export
   function fit(layout: BoxLayout): void {
