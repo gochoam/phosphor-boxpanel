@@ -521,7 +521,7 @@ namespace BoxLayoutPrivate {
    * Initialize the private layout state.
    *
    * #### Notes
-   * This should be called during the layout initialization.
+   * This should be called during layout initialization.
    */
   export
   function initialize(layout: BoxLayout): void {
@@ -659,7 +659,7 @@ namespace BoxLayoutPrivate {
     style.maxWidth = maxW === Infinity ? 'none' : maxW + 'px';
     style.maxHeight = maxH === Infinity ? 'none' : maxH + 'px';
 
-    // Notifiy the ancestor that it should fit immediately.
+    // Notify the ancestor that it should fit immediately.
     if (parent.parent) sendMessage(parent.parent, Widget.MsgFitRequest);
 
     // Notify the parent that it should update immediately.
