@@ -19,7 +19,7 @@ import {
 } from 'phosphor-domutil';
 
 import {
-  Message, postMessage, sendMessage
+  Message, sendMessage
 } from 'phosphor-messaging';
 
 import {
@@ -27,11 +27,13 @@ import {
 } from 'phosphor-properties';
 
 import {
-  ChildIndexMessage, ChildMessage, Panel, ResizeMessage, Widget
+  ChildMessage, Panel, PanelLayout, ResizeMessage, Widget
 } from 'phosphor-widget';
 
 import './index.css';
 
+
+// TODO - need better solution for storing these class names
 
 /**
  * The class name added to BoxPanel instances.
@@ -39,28 +41,28 @@ import './index.css';
 const BOX_PANEL_CLASS = 'p-BoxPanel';
 
 /**
- * The class name added to left-to-right box panels.
+ * The class name added to left-to-right box layout parents.
  */
 const LEFT_TO_RIGHT_CLASS = 'p-mod-left-to-right';
 
 /**
- * The class name added to right-to-left box panels.
+ * The class name added to right-to-left box layout parents.
  */
 const RIGHT_TO_LEFT_CLASS = 'p-mod-right-to-left';
 
 /**
- * The class name added to top-to-bottom box panels.
+ * The class name added to top-to-bottom box layout parents.
  */
 const TOP_TO_BOTTOM_CLASS = 'p-mod-top-to-bottom';
 
 /**
- * The class name added to bottom-to-top box panels.
+ * The class name added to bottom-to-top box layout parents.
  */
 const BOTTOM_TO_TOP_CLASS = 'p-mod-bottom-to-top';
 
 
 /**
- * The layout direction of a box panel.
+ * The layout direction of a box layout.
  */
 export
 enum Direction {
@@ -88,145 +90,17 @@ enum Direction {
 
 /**
  * A panel which arranges its children in a single row or column.
+ *
+ * #### Notes
+ * This class provides a convenience wrapper around a [[BoxLayout]].
  */
 export
 class BoxPanel extends Panel {
   /**
-   * A convenience alias of the `LeftToRight` [[Direction]].
+   * Create a box layout for a box panel.
    */
-  static LeftToRight = Direction.LeftToRight;
-
-  /**
-   * A convenience alias of the `RightToLeft` [[Direction]].
-   */
-  static RightToLeft = Direction.RightToLeft;
-
-  /**
-   * A convenience alias of the `TopToBottom` [[Direction]].
-   */
-  static TopToBottom = Direction.TopToBottom;
-
-  /**
-   * A convenience alias of the `BottomToTop` [[Direction]].
-   */
-  static BottomToTop = Direction.BottomToTop;
-
-  /**
-   * The property descriptor for the box panel layout direction.
-   *
-   * The controls the arrangement of child widgets within the panel.
-   * The default value is `TopToBottom`.
-   *
-   * **See also:** [[direction]]
-   */
-  static directionProperty = new Property<BoxPanel, Direction>({
-    name: 'direction',
-    value: Direction.TopToBottom,
-    changed: (owner, old, value) => owner._onDirectionChanged(old, value),
-  });
-
-  /**
-   * The property descriptor for the box panel spacing.
-   *
-   * The controls the fixed spacing between the child widgets, in
-   * pixels. The default value is `8`.
-   *
-   * **See also:** [[spacing]]
-   */
-  static spacingProperty = new Property<BoxPanel, number>({
-    name: 'spacing',
-    value: 8,
-    coerce: (owner, value) => Math.max(0, value | 0),
-    changed: owner => postMessage(owner, Panel.MsgLayoutRequest),
-  });
-
-  /**
-   * The property descriptor for a widget stretch factor.
-   *
-   * This is an attached property which controls how much a child widget
-   * stretches or shrinks relative to its siblings when the box panel is
-   * resized. The default value is `0`.
-   *
-   * **See also:** [[getStretch]], [[setStretch]]
-   */
-  static stretchProperty = new Property<Widget, number>({
-    name: 'stretch',
-    value: 0,
-    coerce: (owner, value) => Math.max(0, value | 0),
-    changed: onChildPropertyChanged,
-  });
-
-  /**
-   * The property descriptor for a widget size basis.
-   *
-   * This is an attached property which controls the preferred size of
-   * a child widget. The widget will be initialized to this size before
-   * being expanded or shrunk to fit the available layout space. The
-   * default value is `0`.
-   *
-   * **See also:** [[getSizeBasis]], [[setSizeBasis]]
-   */
-  static sizeBasisProperty = new Property<Widget, number>({
-    name: 'sizeBasis',
-    value: 0,
-    coerce: (owner, value) => Math.max(0, value | 0),
-    changed: onChildPropertyChanged,
-  });
-
-  /**
-   * Get the box panel stretch factor for the given widget.
-   *
-   * @param widget - The widget of interest.
-   *
-   * @returns The box panel stretch factor for the widget.
-   *
-   * #### Notes
-   * This is a pure delegate to the [[stretchProperty]].
-   */
-  static getStretch(widget: Widget): number {
-    return BoxPanel.stretchProperty.get(widget);
-  }
-
-  /**
-   * Set the box panel stretch factor for the given widget.
-   *
-   * @param widget - The widget of interest.
-   *
-   * @param value - The value for the stretch factor.
-   *
-   * #### Notes
-   * This is a pure delegate to the [[stretchProperty]].
-   */
-  static setStretch(widget: Widget, value: number): void {
-    BoxPanel.stretchProperty.set(widget, value);
-  }
-
-  /**
-   * Get the box panel size basis for the given widget.
-   *
-   * @param widget - The widget of interest.
-   *
-   * @returns The box panel size basis for the widget.
-   *
-   * #### Notes
-   * This is a pure delegate to the [[sizeBasisProperty]].
-   */
-  static getSizeBasis(widget: Widget): number {
-    return BoxPanel.sizeBasisProperty.get(widget);
-  }
-
-  /**
-   * Set the box panel size basis for the given widget.
-   *
-   * @param widget - The widget of interest.
-   *
-   * @param value - The value for the size basis.
-   *
-   * #### Notes
-   * This is a pure delegate to the [[sizeBasisProperty]].
-   */
-  static setSizeBasis(widget: Widget, value: number): void {
-    BoxPanel.sizeBasisProperty.set(widget, value);
+  static createLayout(): BoxLayout {
+    return new BoxLayout();
   }
 
   /**
@@ -235,84 +109,209 @@ class BoxPanel extends Panel {
   constructor() {
     super();
     this.addClass(BOX_PANEL_CLASS);
-    this.addClass(TOP_TO_BOTTOM_CLASS);
-  }
-
-  /**
-   * Dispose of the resources held by the panel.
-   */
-  dispose(): void {
-    this._sizers.length = 0;
-    super.dispose();
   }
 
   /**
    * Get the layout direction for the box panel.
-   *
-   * #### Notes
-   * This is a pure delegate to the [[directionProperty]].
    */
   get direction(): Direction {
-    return BoxPanel.directionProperty.get(this);
+    return (this.layout as BoxLayout).direction;
   }
 
   /**
    * Set the layout direction for the box panel.
-   *
-   * #### Notes
-   * This is a pure delegate to the [[directionProperty]].
    */
   set direction(value: Direction) {
-    BoxPanel.directionProperty.set(this, value);
+    (this.layout as BoxLayout).direction = value;
   }
 
   /**
    * Get the inter-element spacing for the box panel.
-   *
-   * #### Notes
-   * This is a pure delegate to the [[spacingProperty]].
    */
   get spacing(): number {
-    return BoxPanel.spacingProperty.get(this);
+    return (this.layout as BoxLayout).spacing;
   }
 
   /**
    * Set the inter-element spacing for the box panel.
-   *
-   * #### Notes
-   * This is a pure delegate to the [[spacingProperty]].
    */
   set spacing(value: number) {
-    BoxPanel.spacingProperty.set(this, value);
+    (this.layout as BoxLayout).spacing = value;
+  }
+}
+
+
+/**
+ * The namespace for the `BoxPanel` class statics.
+ */
+export
+namespace BoxPanel {
+  /**
+   * A convenience alias of the `LeftToRight` [[Direction]].
+   */
+  export
+  const LeftToRight = Direction.LeftToRight;
+
+  /**
+   * A convenience alias of the `RightToLeft` [[Direction]].
+   */
+  export
+  const RightToLeft = Direction.RightToLeft;
+
+  /**
+   * A convenience alias of the `TopToBottom` [[Direction]].
+   */
+  export
+  const TopToBottom = Direction.TopToBottom;
+
+  /**
+   * A convenience alias of the `BottomToTop` [[Direction]].
+   */
+  export
+  const BottomToTop = Direction.BottomToTop;
+
+  /**
+   * Get the box panel stretch factor for the given widget.
+   *
+   * @param widget - The widget of interest.
+   *
+   * @returns The box panel stretch factor for the widget.
+   */
+  export
+  function getStretch(widget: Widget): number {
+    return BoxLayout.getStretch(widget);
   }
 
   /**
-   * A message handler invoked on a `'child-added'` message.
+   * Set the box panel stretch factor for the given widget.
+   *
+   * @param widget - The widget of interest.
+   *
+   * @param value - The value for the stretch factor.
    */
-  protected onChildAdded(msg: ChildIndexMessage): void {
-    arrays.insert(this._sizers, msg.currentIndex, new BoxSizer());
-    this.node.appendChild(msg.child.node);
-    if (this.isAttached) sendMessage(msg.child, Widget.MsgAfterAttach);
-    postMessage(this, Panel.MsgLayoutRequest);
+  export
+  function setStretch(widget: Widget, value: number): void {
+    BoxLayout.setStretch(widget, value);
   }
 
   /**
-   * A message handler invoked on a `'child-moved'` message.
+   * Get the box panel size basis for the given widget.
+   *
+   * @param widget - The widget of interest.
+   *
+   * @returns The box panel size basis for the widget.
    */
-  protected onChildMoved(msg: ChildIndexMessage): void {
-    arrays.move(this._sizers, msg.previousIndex, msg.currentIndex);
-    postMessage(this, Widget.MsgUpdateRequest);
+  export
+  function getSizeBasis(widget: Widget): number {
+    return BoxLayout.getSizeBasis(widget);
   }
 
   /**
-   * A message handler invoked on a `'child-removed'` message.
+   * Set the box panel size basis for the given widget.
+   *
+   * @param widget - The widget of interest.
+   *
+   * @param value - The value for the size basis.
    */
-  protected onChildRemoved(msg: ChildIndexMessage): void {
-    arrays.removeAt(this._sizers, msg.previousIndex);
-    if (this.isAttached) sendMessage(msg.child, Widget.MsgBeforeDetach);
-    this.node.removeChild(msg.child.node);
-    postMessage(this, Panel.MsgLayoutRequest);
-    resetGeometry(msg.child);
+  export
+  function setSizeBasis(widget: Widget, value: number): void {
+    BoxLayout.setSizeBasis(widget, value);
+  }
+}
+
+
+/**
+ * A layout which arranges its children in a single row or column.
+ */
+export
+class BoxLayout extends PanelLayout {
+  /**
+   * Get the layout direction for the box layout.
+   */
+  get direction(): Direction {
+    return BoxLayoutPrivate.directionProperty.get(this);
+  }
+
+  /**
+   * Set the layout direction for the box layout.
+   */
+  set direction(value: Direction) {
+    BoxLayoutPrivate.directionProperty.set(this, value);
+  }
+
+  /**
+   * Get the inter-element spacing for the box layout.
+   */
+  get spacing(): number {
+    return BoxLayoutPrivate.spacingProperty.get(this);
+  }
+
+  /**
+   * Set the inter-element spacing for the box layout.
+   */
+  set spacing(value: number) {
+    BoxLayoutPrivate.spacingProperty.set(this, value);
+  }
+
+  /**
+   * Initialize the children of the layout.
+   *
+   * #### Notes
+   * This method is called automatically when the layout is installed
+   * on its parent widget.
+   */
+  protected initialize(): void {
+    BoxLayoutPrivate.initialize(this);
+    super.initialize();
+  }
+
+  /**
+   * Attach a child widget to the parent's DOM node.
+   *
+   * @param index - The current index of the child in the layout.
+   *
+   * @param child - The child widget to attach to the parent.
+   *
+   * #### Notes
+   * This is a reimplementation of the superclass method.
+   */
+  protected attachChild(index: number, child: Widget): void {
+    BoxLayoutPrivate.addSizer(this, index);
+    this.parent.node.appendChild(child.node);
+    if (this.parent.isAttached) sendMessage(child, Widget.MsgAfterAttach);
+  }
+
+  /**
+   * Move a child widget in the parent's DOM node.
+   *
+   * @param fromIndex - The previous index of the child in the layout.
+   *
+   * @param toIndex - The current index of the child in the layout.
+   *
+   * @param child - The child widget to move in the parent.
+   *
+   * #### Notes
+   * This is a reimplementation of the superclass method.
+   */
+  protected moveChild(fromIndex: number, toIndex: number, child: Widget): void {
+    BoxLayoutPrivate.moveSizer(this, fromIndex, toIndex);
+  }
+
+  /**
+   * Detach a child widget from the parent's DOM node.
+   *
+   * @param index - The previous index of the child in the layout.
+   *
+   * @param child - The child widget to detach from the parent.
+   *
+   * #### Notes
+   * This is a reimplementation of the superclass method.
+   */
+  protected detachChild(index: number, child: Widget): void {
+    if (this.parent.isAttached) sendMessage(child, Widget.MsgBeforeDetach);
+    this.parent.node.removeChild(child.node);
+    BoxLayoutPrivate.removeSizer(this, index);
+    BoxLayoutPrivate.reset(child);
   }
 
   /**
@@ -320,7 +319,7 @@ class BoxPanel extends Panel {
    */
   protected onAfterShow(msg: Message): void {
     super.onAfterShow(msg);
-    sendMessage(this, Widget.MsgUpdateRequest);
+    this.parent.update();
   }
 
   /**
@@ -328,31 +327,41 @@ class BoxPanel extends Panel {
    */
   protected onAfterAttach(msg: Message): void {
     super.onAfterAttach(msg);
-    postMessage(this, Panel.MsgLayoutRequest);
+    this.parent.fit();
   }
 
   /**
    * A message handler invoked on a `'child-shown'` message.
    */
   protected onChildShown(msg: ChildMessage): void {
-    postMessage(this, Panel.MsgLayoutRequest);
+    // IE paints before firing animation frame callbacks when toggling
+    // `display: none`. This causes flicker, so IE is fit immediately.
+    if (BoxLayoutPrivate.IsIE) {
+      sendMessage(this.parent, Widget.MsgFitRequest);
+    } else {
+      this.parent.fit();
+    }
   }
 
   /**
    * A message handler invoked on a `'child-hidden'` message.
    */
   protected onChildHidden(msg: ChildMessage): void {
-    postMessage(this, Panel.MsgLayoutRequest);
+    // IE paints before firing animation frame callbacks when toggling
+    // `display: none`. This causes flicker, so IE is fit immediately.
+    if (BoxLayoutPrivate.IsIE) {
+      sendMessage(this.parent, Widget.MsgFitRequest);
+    } else {
+      this.parent.fit();
+    }
   }
 
   /**
    * A message handler invoked on a `'resize'` message.
    */
   protected onResize(msg: ResizeMessage): void {
-    if (this.isVisible) {
-      let width = msg.width < 0 ? this.node.offsetWidth : msg.width;
-      let height = msg.height < 0 ? this.node.offsetHeight : msg.height;
-      this._layoutChildren(width, height);
+    if (this.parent.isVisible) {
+      BoxLayoutPrivate.update(this, msg.width, msg.height);
     }
   }
 
@@ -360,53 +369,251 @@ class BoxPanel extends Panel {
    * A message handler invoked on an `'update-request'` message.
    */
   protected onUpdateRequest(msg: Message): void {
-    if (this.isVisible) {
-      this._layoutChildren(this.node.offsetWidth, this.node.offsetHeight);
+    if (this.parent.isVisible) {
+      BoxLayoutPrivate.update(this, -1, -1);
     }
   }
 
   /**
-   * A message handler invoked on a `'layout-request'` message.
+   * A message handler invoked on a `'fit-request'` message.
    */
-  protected onLayoutRequest(msg: Message): void {
-    if (this.isAttached) {
-      this._setupGeometry();
+  protected onFitRequest(msg: Message): void {
+    if (this.parent.isAttached) {
+      BoxLayoutPrivate.fit(this);
     }
+  }
+}
+
+
+/**
+ * The namespace for the `BoxLayout` class statics.
+ */
+export
+namespace BoxLayout {
+  /**
+   * A convenience alias of the `LeftToRight` [[Direction]].
+   */
+  export
+  const LeftToRight = Direction.LeftToRight;
+
+  /**
+   * A convenience alias of the `RightToLeft` [[Direction]].
+   */
+  export
+  const RightToLeft = Direction.RightToLeft;
+
+  /**
+   * A convenience alias of the `TopToBottom` [[Direction]].
+   */
+  export
+  const TopToBottom = Direction.TopToBottom;
+
+  /**
+   * A convenience alias of the `BottomToTop` [[Direction]].
+   */
+  export
+  const BottomToTop = Direction.BottomToTop;
+
+  /**
+   * Get the box panel stretch factor for the given widget.
+   *
+   * @param widget - The widget of interest.
+   *
+   * @returns The box panel stretch factor for the widget.
+   */
+  export
+  function getStretch(widget: Widget): number {
+    return BoxLayoutPrivate.stretchProperty.get(widget);
   }
 
   /**
-   * Update the size constraints of the panel.
+   * Set the box panel stretch factor for the given widget.
+   *
+   * @param widget - The widget of interest.
+   *
+   * @param value - The value for the stretch factor.
    */
-  private _setupGeometry(): void {
+  export
+  function setStretch(widget: Widget, value: number): void {
+    BoxLayoutPrivate.stretchProperty.set(widget, value);
+  }
+
+  /**
+   * Get the box panel size basis for the given widget.
+   *
+   * @param widget - The widget of interest.
+   *
+   * @returns The box panel size basis for the widget.
+   */
+  export
+  function getSizeBasis(widget: Widget): number {
+    return BoxLayoutPrivate.sizeBasisProperty.get(widget);
+  }
+
+  /**
+   * Set the box panel size basis for the given widget.
+   *
+   * @param widget - The widget of interest.
+   *
+   * @param value - The value for the size basis.
+   */
+  export
+  function setSizeBasis(widget: Widget, value: number): void {
+    BoxLayoutPrivate.sizeBasisProperty.set(widget, value);
+  }
+}
+
+
+/**
+ * The namespace for the `BoxLayout` class private data.
+ */
+namespace BoxLayoutPrivate {
+  /**
+   * A flag indicating whether the browser is IE.
+   */
+  export
+  const IsIE = /Trident/.test(navigator.userAgent);
+
+  /**
+   * The property descriptor for the box layout direction.
+   */
+  export
+  const directionProperty = new Property<BoxLayout, Direction>({
+    name: 'direction',
+    value: Direction.TopToBottom,
+    changed: onDirectionChanged,
+  });
+
+  /**
+   * The property descriptor for the box layout spacing.
+   */
+  export
+  const spacingProperty = new Property<BoxLayout, number>({
+    name: 'spacing',
+    value: 8,
+    coerce: (owner, value) => Math.max(0, value | 0),
+    changed: onSpacingChanged,
+  });
+
+  /**
+   * The property descriptor for a widget stretch factor.
+   */
+  export
+  const stretchProperty = new Property<Widget, number>({
+    name: 'stretch',
+    value: 0,
+    coerce: (owner, value) => Math.max(0, value | 0),
+    changed: onChildPropertyChanged,
+  });
+
+  /**
+   * The property descriptor for a widget size basis.
+   */
+  export
+  const sizeBasisProperty = new Property<Widget, number>({
+    name: 'sizeBasis',
+    value: 0,
+    coerce: (owner, value) => Math.max(0, value | 0),
+    changed: onChildPropertyChanged,
+  });
+
+  /**
+   * Initialize the private layout state.
+   *
+   * #### Notes
+   * This should be called during layout initialization.
+   */
+  export
+  function initialize(layout: BoxLayout): void {
+    updateParentDirection(layout);
+  }
+
+  /**
+   * Add a sizer to the layout at the specified index.
+   */
+  export
+  function addSizer(layout: BoxLayout, index: number): void {
+    arrays.insert(sizersProperty.get(layout), index, new BoxSizer());
+    if (layout.parent) layout.parent.fit();
+  }
+
+  /**
+   * Move a sizer in the layout from one index to another.
+   */
+  export
+  function moveSizer(layout: BoxLayout, fromIndex: number, toIndex: number): void {
+    arrays.move(sizersProperty.get(layout), fromIndex, toIndex);
+    if (layout.parent) layout.parent.update();
+  }
+
+  /**
+   * Remove a sizer from the layout at the specified index.
+   */
+  export
+  function removeSizer(layout: BoxLayout, index: number): void {
+    arrays.removeAt(sizersProperty.get(layout), index);
+    if (layout.parent) layout.parent.fit();
+  }
+
+  /**
+   * Reset the layout modifications for the given child widget.
+   */
+  export
+  function reset(widget: Widget): void {
+    let rect = rectProperty.get(widget);
+    let style = widget.node.style;
+    rect.top = NaN;
+    rect.left = NaN;
+    rect.width = NaN;
+    rect.height = NaN;
+    style.top = '';
+    style.left = '';
+    style.width = '';
+    style.height = '';
+  }
+
+  /**
+   * Fit the layout to total size required by the child widgets.
+   */
+  export
+  function fit(layout: BoxLayout): void {
+    // Bail early if there is no parent.
+    let parent = layout.parent;
+    if (!parent) {
+      return;
+    }
+
     // Compute the visible item count.
     let visibleCount = 0;
-    for (let i = 0, n = this.childCount(); i < n; ++i) {
-      if (!this.childAt(i).hidden) visibleCount++;
+    for (let i = 0, n = layout.childCount(); i < n; ++i) {
+      if (!layout.childAt(i).isHidden) visibleCount++;
     }
 
     // Update the fixed space for the visible items.
-    this._fixedSpace = this.spacing * Math.max(0, visibleCount - 1);
+    let fixedSpace = layout.spacing * Math.max(0, visibleCount - 1);
+    fixedSpaceProperty.set(layout, fixedSpace);
 
     // Update the sizers and compute the new size limits.
     let minW = 0;
     let minH = 0;
     let maxW = Infinity;
     let maxH = Infinity;
-    let dir = this.direction;
+    let dir = layout.direction;
+    let sizers = sizersProperty.get(layout);
     if (dir === Direction.LeftToRight || dir === Direction.RightToLeft) {
-      minW = this._fixedSpace;
+      minW = fixedSpace;
       maxW = visibleCount > 0 ? minW : maxW;
-      for (let i = 0, n = this.childCount(); i < n; ++i) {
-        let widget = this.childAt(i);
-        let sizer = this._sizers[i];
-        if (widget.hidden) {
+      for (let i = 0, n = layout.childCount(); i < n; ++i) {
+        let widget = layout.childAt(i);
+        let sizer = sizers[i];
+        if (widget.isHidden) {
           sizer.minSize = 0;
           sizer.maxSize = 0;
           continue;
         }
         let limits = sizeLimits(widget.node);
-        sizer.sizeHint = BoxPanel.getSizeBasis(widget);
-        sizer.stretch = BoxPanel.getStretch(widget);
+        sizer.sizeHint = sizeBasisProperty.get(widget);
+        sizer.stretch = stretchProperty.get(widget);
         sizer.minSize = limits.minWidth;
         sizer.maxSize = limits.maxWidth;
         minW += limits.minWidth;
@@ -415,19 +622,19 @@ class BoxPanel extends Panel {
         maxH = Math.min(maxH, limits.maxHeight);
       }
     } else {
-      minH = this._fixedSpace;
+      minH = fixedSpace;
       maxH = visibleCount > 0 ? minH : maxH;
-      for (let i = 0, n = this.childCount(); i < n; ++i) {
-        let widget = this.childAt(i);
-        let sizer = this._sizers[i];
-        if (widget.hidden) {
+      for (let i = 0, n = layout.childCount(); i < n; ++i) {
+        let widget = layout.childAt(i);
+        let sizer = sizers[i];
+        if (widget.isHidden) {
           sizer.minSize = 0;
           sizer.maxSize = 0;
           continue;
         }
         let limits = sizeLimits(widget.node);
-        sizer.sizeHint = BoxPanel.getSizeBasis(widget);
-        sizer.stretch = BoxPanel.getStretch(widget);
+        sizer.sizeHint = sizeBasisProperty.get(widget);
+        sizer.stretch = stretchProperty.get(widget);
         sizer.minSize = limits.minHeight;
         sizer.maxSize = limits.maxHeight;
         minH += limits.minHeight;
@@ -438,37 +645,59 @@ class BoxPanel extends Panel {
     }
 
     // Update the box sizing and add it to the size constraints.
-    this._box = boxSizing(this.node);
-    minW += this._box.horizontalSum;
-    minH += this._box.verticalSum;
-    maxW += this._box.horizontalSum;
-    maxH += this._box.verticalSum;
+    let box = boxSizing(parent.node);
+    boxSizingProperty.set(parent, box);
+    minW += box.horizontalSum;
+    minH += box.verticalSum;
+    maxW += box.horizontalSum;
+    maxH += box.verticalSum;
 
     // Update the panel's size constraints.
-    let style = this.node.style;
+    let style = parent.node.style;
     style.minWidth = minW + 'px';
     style.minHeight = minH + 'px';
     style.maxWidth = maxW === Infinity ? 'none' : maxW + 'px';
     style.maxHeight = maxH === Infinity ? 'none' : maxH + 'px';
 
-    // Notifiy the parent that it should relayout.
-    if (this.parent) sendMessage(this.parent, Panel.MsgLayoutRequest);
+    // Notify the ancestor that it should fit immediately.
+    if (parent.parent) sendMessage(parent.parent, Widget.MsgFitRequest);
 
-    // Update the layout for the child widgets.
-    sendMessage(this, Widget.MsgUpdateRequest);
+    // Notify the parent that it should update immediately.
+    sendMessage(parent, Widget.MsgUpdateRequest);
   }
 
   /**
    * Layout the children using the given offset width and height.
+   *
+   * If the dimensions are unknown, they should be specified as `-1`.
    */
-  private _layoutChildren(offsetWidth: number, offsetHeight: number): void {
-    // Bail early if their are no children to arrange.
-    if (this.childCount() === 0) {
+  export
+  function update(layout: BoxLayout, offsetWidth: number, offsetHeight: number): void {
+    // Bail early if there are no children to layout.
+    if (layout.childCount() === 0) {
       return;
     }
 
-    // Ensure the box sizing is created.
-    let box = this._box || (this._box = boxSizing(this.node));
+    // Bail early if there is no parent.
+    let parent = layout.parent;
+    if (!parent) {
+      return;
+    }
+
+    // Measure the parent if the offset dimensions are unknown.
+    if (offsetWidth < 0) {
+      offsetWidth = parent.node.offsetWidth;
+    }
+    if (offsetHeight < 0) {
+      offsetHeight = parent.node.offsetHeight;
+    }
+
+    // Lookup the layout data.
+    let dir = layout.direction;
+    let spacing = layout.spacing;
+    let box = boxSizingProperty.get(parent);
+    let sizers = sizersProperty.get(layout);
+    let fixedSpace = fixedSpaceProperty.get(layout);
 
     // Compute the actual layout bounds adjusted for border and padding.
     let top = box.paddingTop;
@@ -476,52 +705,50 @@ class BoxPanel extends Panel {
     let width = offsetWidth - box.horizontalSum;
     let height = offsetHeight - box.verticalSum;
 
-    // Distribute the layout space and layout the items.
-    let dir = this.direction;
-    let spacing = this.spacing;
+    // Distribute the layout space and layout the children.
     if (dir === Direction.LeftToRight) {
-      boxCalc(this._sizers, Math.max(0, width - this._fixedSpace));
-      for (let i = 0, n = this.childCount(); i < n; ++i) {
-        let widget = this.childAt(i);
-        if (widget.hidden) {
+      boxCalc(sizers, Math.max(0, width - fixedSpace));
+      for (let i = 0, n = layout.childCount(); i < n; ++i) {
+        let widget = layout.childAt(i);
+        if (widget.isHidden) {
           continue;
         }
-        let size = this._sizers[i].size;
+        let size = sizers[i].size;
         setGeometry(widget, left, top, size, height);
         left += size + spacing;
       }
     } else if (dir === Direction.TopToBottom) {
-      boxCalc(this._sizers, Math.max(0, height - this._fixedSpace));
-      for (let i = 0, n = this.childCount(); i < n; ++i) {
-        let widget = this.childAt(i);
-        if (widget.hidden) {
+      boxCalc(sizers, Math.max(0, height - fixedSpace));
+      for (let i = 0, n = layout.childCount(); i < n; ++i) {
+        let widget = layout.childAt(i);
+        if (widget.isHidden) {
           continue;
         }
-        let size = this._sizers[i].size;
+        let size = sizers[i].size;
         setGeometry(widget, left, top, width, size);
         top += size + spacing;
       }
     } else if (dir === Direction.RightToLeft) {
       left += width;
-      boxCalc(this._sizers, Math.max(0, width - this._fixedSpace));
-      for (let i = 0, n = this.childCount(); i < n; ++i) {
-        let widget = this.childAt(i);
-        if (widget.hidden) {
+      boxCalc(sizers, Math.max(0, width - fixedSpace));
+      for (let i = 0, n = layout.childCount(); i < n; ++i) {
+        let widget = layout.childAt(i);
+        if (widget.isHidden) {
           continue;
         }
-        let size = this._sizers[i].size;
+        let size = sizers[i].size;
         setGeometry(widget, left - size, top, size, height);
         left -= size + spacing;
       }
     } else {
       top += height;
-      boxCalc(this._sizers, Math.max(0, height - this._fixedSpace));
-      for (let i = 0, n = this.childCount(); i < n; ++i) {
-        let widget = this.childAt(i);
-        if (widget.hidden) {
+      boxCalc(sizers, Math.max(0, height - fixedSpace));
+      for (let i = 0, n = layout.childCount(); i < n; ++i) {
+        let widget = layout.childAt(i);
+        if (widget.isHidden) {
           continue;
         }
-        let size = this._sizers[i].size;
+        let size = sizers[i].size;
         setGeometry(widget, left, top - size, width, size);
         top -= size + spacing;
       }
@@ -529,128 +756,128 @@ class BoxPanel extends Panel {
   }
 
   /**
-   * The change handler for the [[orientationProperty]].
+   * An object which represents an offset rect.
    */
-  private _onDirectionChanged(old: Direction, value: Direction): void {
-    this.toggleClass(LEFT_TO_RIGHT_CLASS, value === Direction.LeftToRight);
-    this.toggleClass(RIGHT_TO_LEFT_CLASS, value === Direction.RightToLeft);
-    this.toggleClass(TOP_TO_BOTTOM_CLASS, value === Direction.TopToBottom);
-    this.toggleClass(BOTTOM_TO_TOP_CLASS, value === Direction.BottomToTop);
-    postMessage(this, Panel.MsgLayoutRequest);
+  interface IRect {
+    /**
+     * The offset top edge, in pixels.
+     */
+    top: number;
+
+    /**
+     * The offset left edge, in pixels.
+     */
+    left: number;
+
+    /**
+     * The offset width, in pixels.
+     */
+    width: number;
+
+    /**
+     * The offset height, in pixels.
+     */
+    height: number;
   }
-
-  private _fixedSpace = 0;
-  private _box: IBoxSizing = null;
-  private _sizers: BoxSizer[] = [];
-}
-
-
-/**
- * An object which represents an offset rect.
- */
-interface IRect {
-  /**
-   * The offset top edge, in pixels.
-   */
-  top: number;
-
-  /**
-   * The offset left edge, in pixels.
-   */
-  left: number;
 
   /**
-   * The offset width, in pixels.
+   * A property descriptor for a widget offset rect.
    */
-  width: number;
+  var rectProperty = new Property<Widget, IRect>({
+    name: 'rect',
+    create: () => ({ top: NaN, left: NaN, width: NaN, height: NaN }),
+  });
 
   /**
-   * The offset height, in pixels.
+   * A property descriptor for the box sizing of a widget.
    */
-  height: number;
-}
+  var boxSizingProperty = new Property<Widget, IBoxSizing>({
+    name: 'boxSizing',
+    create: owner => boxSizing(owner.node),
+  });
 
+  /**
+   * A property descriptor for the box layout sizers.
+   */
+  var sizersProperty = new Property<BoxLayout, BoxSizer[]>({
+    name: 'sizers',
+    create: () => [],
+  });
 
-/**
- * A private attached property which stores a widget offset rect.
- */
-const rectProperty = new Property<Widget, IRect>({
-  name: 'rect',
-  create: createRect,
-});
+  /**
+   * A property descriptor for the box layout fixed spacing.
+   */
+  var fixedSpaceProperty = new Property<BoxLayout, number>({
+    name: 'fixedSpace',
+    value: 0,
+  });
 
-
-/**
- * Create a new offset rect filled with NaNs.
- */
-function createRect(): IRect {
-  return { top: NaN, left: NaN, width: NaN, height: NaN };
-}
-
-
-/**
- * Get the offset rect for a widget.
- */
-function getRect(widget: Widget): IRect {
-  return rectProperty.get(widget);
-}
-
-
-/**
- * Set the offset geometry for the given widget.
- *
- * A resize message will be dispatched to the widget if appropriate.
- */
-function setGeometry(widget: Widget, left: number, top: number, width: number, height: number): void {
-  let resized = false;
-  let rect = getRect(widget);
-  let style = widget.node.style;
-  if (rect.top !== top) {
-    rect.top = top;
-    style.top = top + 'px';
+  /**
+   * The change handler for the box layout direction.
+   */
+  function onDirectionChanged(layout: BoxLayout): void {
+    updateParentDirection(layout);
+    if (layout.parent) layout.parent.fit();
   }
-  if (rect.left !== left) {
-    rect.left = left;
-    style.left = left + 'px';
-  }
-  if (rect.width !== width) {
-    resized = true;
-    rect.width = width;
-    style.width = width + 'px';
-  }
-  if (rect.height !== height) {
-    resized = true;
-    rect.height = height;
-    style.height = height + 'px';
-  }
-  if (resized) {
-    sendMessage(widget, new ResizeMessage(width, height));
-  }
-}
 
+  /**
+   * The change handler for the box layout spacing.
+   */
+  function onSpacingChanged(layout: BoxLayout): void {
+    if (layout.parent) layout.parent.fit();
+  }
 
-/**
- * Reset the inline geometry and rect cache for the given widget
- */
-function resetGeometry(widget: Widget): void {
-  let rect = getRect(widget);
-  let style = widget.node.style;
-  rect.top = NaN;
-  rect.left = NaN;
-  rect.width = NaN;
-  rect.height = NaN;
-  style.top = '';
-  style.left = '';
-  style.width = '';
-  style.height = '';
-}
+  /**
+   * The change handler for the attached child properties.
+   */
+  function onChildPropertyChanged(child: Widget): void {
+    let parent = child.parent;
+    let layout = parent && parent.layout;
+    if (layout instanceof BoxLayout) parent.fit();
+  }
 
+  /**
+   * Update the CSS direction class on the layout parent.
+   */
+  function updateParentDirection(layout: BoxLayout): void {
+    if (!layout.parent) return;
+    let parent = layout.parent;
+    let dir = layout.direction;
+    parent.toggleClass(LEFT_TO_RIGHT_CLASS, dir === Direction.LeftToRight);
+    parent.toggleClass(RIGHT_TO_LEFT_CLASS, dir === Direction.RightToLeft);
+    parent.toggleClass(TOP_TO_BOTTOM_CLASS, dir === Direction.TopToBottom);
+    parent.toggleClass(BOTTOM_TO_TOP_CLASS, dir === Direction.BottomToTop);
+  }
 
-/**
- * The change handler for the attached child properties.
- */
-function onChildPropertyChanged(child: Widget): void {
-  if (child.parent instanceof BoxPanel) {
-    postMessage(child.parent, Panel.MsgLayoutRequest);
+  /**
+   * Set the offset geometry for the given widget.
+   *
+   * A resize message will be dispatched to the widget if appropriate.
+   */
+  function setGeometry(widget: Widget, left: number, top: number, width: number, height: number): void {
+    let resized = false;
+    let style = widget.node.style;
+    let rect = rectProperty.get(widget);
+    if (rect.top !== top) {
+      rect.top = top;
+      style.top = top + 'px';
+    }
+    if (rect.left !== left) {
+      rect.left = left;
+      style.left = left + 'px';
+    }
+    if (rect.width !== width) {
+      resized = true;
+      rect.width = width;
+      style.width = width + 'px';
+    }
+    if (rect.height !== height) {
+      resized = true;
+      rect.height = height;
+      style.height = height + 'px';
+    }
+    if (resized) {
+      sendMessage(widget, new ResizeMessage(width, height));
+    }
   }
 }
