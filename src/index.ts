@@ -276,9 +276,11 @@ class BoxLayout extends PanelLayout {
    * This is a reimplementation of the superclass method.
    */
   protected attachChild(index: number, child: Widget): void {
-    BoxLayoutPrivate.addSizer(this, index);
+    let sizers = BoxLayoutPrivate.sizersProperty.get(this);
+    arrays.insert(sizers, index, new BoxSizer());
     this.parent.node.appendChild(child.node);
     if (this.parent.isAttached) sendMessage(child, Widget.MsgAfterAttach);
+    this.parent.fit();
   }
 
   /**
@@ -294,7 +296,9 @@ class BoxLayout extends PanelLayout {
    * This is a reimplementation of the superclass method.
    */
   protected moveChild(fromIndex: number, toIndex: number, child: Widget): void {
-    BoxLayoutPrivate.moveSizer(this, fromIndex, toIndex);
+    let sizers = BoxLayoutPrivate.sizersProperty.get(this);
+    arrays.move(sizers, fromIndex, toIndex);
+    this.parent.update();
   }
 
   /**
@@ -308,10 +312,12 @@ class BoxLayout extends PanelLayout {
    * This is a reimplementation of the superclass method.
    */
   protected detachChild(index: number, child: Widget): void {
+    let sizers = BoxLayoutPrivate.sizersProperty.get(this);
+    arrays.removeAt(sizers, index);
     if (this.parent.isAttached) sendMessage(child, Widget.MsgBeforeDetach);
     this.parent.node.removeChild(child.node);
-    BoxLayoutPrivate.removeSizer(this, index);
-    BoxLayoutPrivate.reset(child);
+    BoxLayoutPrivate.resetGeometry(child);
+    this.parent.fit();
   }
 
   /**
@@ -496,6 +502,15 @@ namespace BoxLayoutPrivate {
   });
 
   /**
+   * The property descriptor for the box layout sizers.
+   */
+  export
+  const sizersProperty = new Property<BoxLayout, BoxSizer[]>({
+    name: 'sizers',
+    create: () => [],
+  });
+
+  /**
    * The property descriptor for a widget stretch factor.
    */
   export
@@ -529,37 +544,10 @@ namespace BoxLayoutPrivate {
   }
 
   /**
-   * Add a sizer to the layout at the specified index.
+   * Reset the layout geometry for the given child widget.
    */
   export
-  function addSizer(layout: BoxLayout, index: number): void {
-    arrays.insert(sizersProperty.get(layout), index, new BoxSizer());
-    if (layout.parent) layout.parent.fit();
-  }
-
-  /**
-   * Move a sizer in the layout from one index to another.
-   */
-  export
-  function moveSizer(layout: BoxLayout, fromIndex: number, toIndex: number): void {
-    arrays.move(sizersProperty.get(layout), fromIndex, toIndex);
-    if (layout.parent) layout.parent.update();
-  }
-
-  /**
-   * Remove a sizer from the layout at the specified index.
-   */
-  export
-  function removeSizer(layout: BoxLayout, index: number): void {
-    arrays.removeAt(sizersProperty.get(layout), index);
-    if (layout.parent) layout.parent.fit();
-  }
-
-  /**
-   * Reset the layout modifications for the given child widget.
-   */
-  export
-  function reset(widget: Widget): void {
+  function resetGeometry(widget: Widget): void {
     let rect = rectProperty.get(widget);
     let style = widget.node.style;
     rect.top = NaN;
@@ -794,14 +782,6 @@ namespace BoxLayoutPrivate {
   var boxSizingProperty = new Property<Widget, IBoxSizing>({
     name: 'boxSizing',
     create: owner => boxSizing(owner.node),
-  });
-
-  /**
-   * A property descriptor for the box layout sizers.
-   */
-  var sizersProperty = new Property<BoxLayout, BoxSizer[]>({
-    name: 'sizers',
-    create: () => [],
   });
 
   /**
