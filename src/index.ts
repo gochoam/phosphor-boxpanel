@@ -421,11 +421,11 @@ namespace BoxLayout {
   const BottomToTop = Direction.BottomToTop;
 
   /**
-   * Get the box panel stretch factor for the given widget.
+   * Get the box layout stretch factor for the given widget.
    *
    * @param widget - The widget of interest.
    *
-   * @returns The box panel stretch factor for the widget.
+   * @returns The box layout stretch factor for the widget.
    */
   export
   function getStretch(widget: Widget): number {
@@ -433,7 +433,7 @@ namespace BoxLayout {
   }
 
   /**
-   * Set the box panel stretch factor for the given widget.
+   * Set the box layout stretch factor for the given widget.
    *
    * @param widget - The widget of interest.
    *
@@ -445,11 +445,11 @@ namespace BoxLayout {
   }
 
   /**
-   * Get the box panel size basis for the given widget.
+   * Get the box layout size basis for the given widget.
    *
    * @param widget - The widget of interest.
    *
-   * @returns The box panel size basis for the widget.
+   * @returns The box layout size basis for the widget.
    */
   export
   function getSizeBasis(widget: Widget): number {
@@ -457,7 +457,7 @@ namespace BoxLayout {
   }
 
   /**
-   * Set the box panel size basis for the given widget.
+   * Set the box layout size basis for the given widget.
    *
    * @param widget - The widget of interest.
    *
