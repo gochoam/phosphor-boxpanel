@@ -39,6 +39,11 @@ import {
 const BOX_PANEL_CLASS = 'p-BoxPanel';
 
 /**
+ *
+ */
+const CHILD_CLASS = 'p-BoxPanel-child';
+
+/**
  * The class name added to left-to-right box layout parents.
  */
 const LEFT_TO_RIGHT_CLASS = 'p-mod-left-to-right';
@@ -135,6 +140,20 @@ class BoxPanel extends Panel {
    */
   set spacing(value: number) {
     (this.layout as BoxLayout).spacing = value;
+  }
+
+  /**
+   *
+   */
+  protected onChildAdded(msg: ChildMessage): void {
+    msg.child.addClass(CHILD_CLASS);
+  }
+
+  /**
+   *
+   */
+  protected onChildRemoved(msg: ChildMessage): void {
+    msg.child.removeClass(CHILD_CLASS);
   }
 }
 
