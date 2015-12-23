@@ -30,8 +30,6 @@ import {
   ChildMessage, Panel, PanelLayout, ResizeMessage, Widget
 } from 'phosphor-widget';
 
-import './index.css';
-
 
 // TODO - need better solution for storing these class names
 
@@ -278,6 +276,7 @@ class BoxLayout extends PanelLayout {
   protected attachChild(index: number, child: Widget): void {
     let sizers = BoxLayoutPrivate.sizersProperty.get(this);
     arrays.insert(sizers, index, new BoxSizer());
+    BoxLayoutPrivate.prepareGeometry(child);
     this.parent.node.appendChild(child.node);
     if (this.parent.isAttached) sendMessage(child, Widget.MsgAfterAttach);
     this.parent.fit();
@@ -544,6 +543,14 @@ namespace BoxLayoutPrivate {
   }
 
   /**
+   * Prepare the layout geometry for the given child widget.
+   */
+  export
+  function prepareGeometry(widget: Widget): void {
+    widget.node.style.position = 'absolute';
+  }
+
+  /**
    * Reset the layout geometry for the given child widget.
    */
   export
@@ -554,6 +561,7 @@ namespace BoxLayoutPrivate {
     rect.left = NaN;
     rect.width = NaN;
     rect.height = NaN;
+    style.position = '';
     style.top = '';
     style.left = '';
     style.width = '';
