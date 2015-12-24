@@ -39,7 +39,7 @@ import {
 const BOX_PANEL_CLASS = 'p-BoxPanel';
 
 /**
- *
+ * The class name added to a BoxPanel child.
  */
 const CHILD_CLASS = 'p-BoxPanel-child';
 
@@ -143,14 +143,14 @@ class BoxPanel extends Panel {
   }
 
   /**
-   *
+   * A message handler invoked on a `'child-added'` message.
    */
   protected onChildAdded(msg: ChildMessage): void {
     msg.child.addClass(CHILD_CLASS);
   }
 
   /**
-   *
+   * A message handler invoked on a `'child-removed'` message.
    */
   protected onChildRemoved(msg: ChildMessage): void {
     msg.child.removeClass(CHILD_CLASS);
@@ -562,7 +562,7 @@ namespace BoxLayoutPrivate {
   }
 
   /**
-   * Prepare the layout geometry for the given child widget.
+   * Prepare a child widget for absolute layout geometry.
    */
   export
   function prepareGeometry(widget: Widget): void {
@@ -570,7 +570,7 @@ namespace BoxLayoutPrivate {
   }
 
   /**
-   * Reset the layout geometry for the given child widget.
+   * Reset the layout geometry of a child widget.
    */
   export
   function resetGeometry(widget: Widget): void {
