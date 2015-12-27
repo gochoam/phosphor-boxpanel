@@ -246,28 +246,41 @@ class BoxLayout extends PanelLayout {
    * Get the layout direction for the box layout.
    */
   get direction(): Direction {
-    return BoxLayoutPrivate.directionProperty.get(this);
+    return this._direction;
   }
 
   /**
    * Set the layout direction for the box layout.
    */
   set direction(value: Direction) {
-    BoxLayoutPrivate.directionProperty.set(this, value);
+    if (this._direction === value) {
+      return;
+    }
+    this._direction = value;
+    if (!this.parent) {
+      return;
+    }
+    BoxLayoutPrivate.toggleDirClass(this.parent, value);
+    this.parent.fit();
   }
 
   /**
    * Get the inter-element spacing for the box layout.
    */
   get spacing(): number {
-    return BoxLayoutPrivate.spacingProperty.get(this);
+    return this._spacing;
   }
 
   /**
    * Set the inter-element spacing for the box layout.
    */
   set spacing(value: number) {
-    BoxLayoutPrivate.spacingProperty.set(this, value);
+    value = Math.max(0, value | 0);
+    if (this._spacing === value) {
+      return;
+    }
+    this._spacing = value;
+    if (this.parent) this.parent.fit();
   }
 
   /**
@@ -278,7 +291,7 @@ class BoxLayout extends PanelLayout {
    * on its parent widget.
    */
   protected initialize(): void {
-    BoxLayoutPrivate.initialize(this);
+    BoxLayoutPrivate.toggleDirClass(this.parent, this.direction);
     super.initialize();
   }
 
@@ -406,6 +419,9 @@ class BoxLayout extends PanelLayout {
       BoxLayoutPrivate.fit(this);
     }
   }
+
+  private _spacing = 8;
+  private _direction = Direction.TopToBottom;
 }
 
 
@@ -499,27 +515,6 @@ namespace BoxLayoutPrivate {
   const IsIE = /Trident/.test(navigator.userAgent);
 
   /**
-   * The property descriptor for the box layout direction.
-   */
-  export
-  const directionProperty = new Property<BoxLayout, Direction>({
-    name: 'direction',
-    value: Direction.TopToBottom,
-    changed: onDirectionChanged,
-  });
-
-  /**
-   * The property descriptor for the box layout spacing.
-   */
-  export
-  const spacingProperty = new Property<BoxLayout, number>({
-    name: 'spacing',
-    value: 8,
-    coerce: (owner, value) => Math.max(0, value | 0),
-    changed: onSpacingChanged,
-  });
-
-  /**
    * The property descriptor for the box layout sizers.
    */
   export
@@ -551,14 +546,14 @@ namespace BoxLayoutPrivate {
   });
 
   /**
-   * Initialize the private layout state.
-   *
-   * #### Notes
-   * This should be called during layout initialization.
+   * Toggle the CSS direction class for the given widget.
    */
   export
-  function initialize(layout: BoxLayout): void {
-    updateParentDirection(layout);
+  function toggleDirClass(widget: Widget, dir: Direction): void {
+    widget.toggleClass(LEFT_TO_RIGHT_CLASS, dir === Direction.LeftToRight);
+    widget.toggleClass(RIGHT_TO_LEFT_CLASS, dir === Direction.RightToLeft);
+    widget.toggleClass(TOP_TO_BOTTOM_CLASS, dir === Direction.TopToBottom);
+    widget.toggleClass(BOTTOM_TO_TOP_CLASS, dir === Direction.BottomToTop);
   }
 
   /**
@@ -820,40 +815,12 @@ namespace BoxLayoutPrivate {
   });
 
   /**
-   * The change handler for the box layout direction.
-   */
-  function onDirectionChanged(layout: BoxLayout): void {
-    updateParentDirection(layout);
-    if (layout.parent) layout.parent.fit();
-  }
-
-  /**
-   * The change handler for the box layout spacing.
-   */
-  function onSpacingChanged(layout: BoxLayout): void {
-    if (layout.parent) layout.parent.fit();
-  }
-
-  /**
    * The change handler for the attached child properties.
    */
   function onChildPropertyChanged(child: Widget): void {
     let parent = child.parent;
     let layout = parent && parent.layout;
     if (layout instanceof BoxLayout) parent.fit();
-  }
-
-  /**
-   * Update the CSS direction class on the layout parent.
-   */
-  function updateParentDirection(layout: BoxLayout): void {
-    if (!layout.parent) return;
-    let parent = layout.parent;
-    let dir = layout.direction;
-    parent.toggleClass(LEFT_TO_RIGHT_CLASS, dir === Direction.LeftToRight);
-    parent.toggleClass(RIGHT_TO_LEFT_CLASS, dir === Direction.RightToLeft);
-    parent.toggleClass(TOP_TO_BOTTOM_CLASS, dir === Direction.TopToBottom);
-    parent.toggleClass(BOTTOM_TO_TOP_CLASS, dir === Direction.BottomToTop);
   }
 
   /**
