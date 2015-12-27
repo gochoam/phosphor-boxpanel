@@ -280,7 +280,10 @@ class BoxLayout extends PanelLayout {
       return;
     }
     this._spacing = value;
-    if (this.parent) this.parent.fit();
+    if (!this.parent) {
+      return;
+    }
+    this.parent.fit();
   }
 
   /**
@@ -493,7 +496,7 @@ class BoxLayout extends PanelLayout {
     maxW += box.horizontalSum;
     maxH += box.verticalSum;
 
-    // Update the panel's size constraints.
+    // Update the parent's size constraints.
     let style = this.parent.node.style;
     style.minWidth = minW + 'px';
     style.minHeight = minH + 'px';
