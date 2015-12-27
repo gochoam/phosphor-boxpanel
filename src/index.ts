@@ -306,8 +306,7 @@ class BoxLayout extends PanelLayout {
    * This is a reimplementation of the superclass method.
    */
   protected attachChild(index: number, child: Widget): void {
-    let sizers = BoxLayoutPrivate.sizersProperty.get(this);
-    arrays.insert(sizers, index, new BoxSizer());
+    arrays.insert(this._sizers, index, new BoxSizer());
     BoxLayoutPrivate.prepareGeometry(child);
     this.parent.node.appendChild(child.node);
     if (this.parent.isAttached) sendMessage(child, Widget.MsgAfterAttach);
@@ -327,8 +326,7 @@ class BoxLayout extends PanelLayout {
    * This is a reimplementation of the superclass method.
    */
   protected moveChild(fromIndex: number, toIndex: number, child: Widget): void {
-    let sizers = BoxLayoutPrivate.sizersProperty.get(this);
-    arrays.move(sizers, fromIndex, toIndex);
+    arrays.move(this._sizers, fromIndex, toIndex);
     this.parent.update();
   }
 
@@ -343,8 +341,7 @@ class BoxLayout extends PanelLayout {
    * This is a reimplementation of the superclass method.
    */
   protected detachChild(index: number, child: Widget): void {
-    let sizers = BoxLayoutPrivate.sizersProperty.get(this);
-    arrays.removeAt(sizers, index);
+    arrays.removeAt(this._sizers, index);
     if (this.parent.isAttached) sendMessage(child, Widget.MsgBeforeDetach);
     this.parent.node.removeChild(child.node);
     BoxLayoutPrivate.resetGeometry(child);
@@ -398,7 +395,7 @@ class BoxLayout extends PanelLayout {
    */
   protected onResize(msg: ResizeMessage): void {
     if (this.parent.isVisible) {
-      BoxLayoutPrivate.update(this, msg.width, msg.height);
+      this._update(msg.width, msg.height);
     }
   }
 
@@ -407,7 +404,7 @@ class BoxLayout extends PanelLayout {
    */
   protected onUpdateRequest(msg: Message): void {
     if (this.parent.isVisible) {
-      BoxLayoutPrivate.update(this, -1, -1);
+      this._update(-1, -1);
     }
   }
 
@@ -416,11 +413,196 @@ class BoxLayout extends PanelLayout {
    */
   protected onFitRequest(msg: Message): void {
     if (this.parent.isAttached) {
-      BoxLayoutPrivate.fit(this);
+      this._fit();
     }
   }
 
+  /**
+   * Fit the layout to the total size required by the child widgets.
+   */
+  private _fit(): void {
+    // Compute the visible item count.
+    let nVisible = 0;
+    for (let i = 0, n = this.childCount(); i < n; ++i) {
+      if (!this.childAt(i).isHidden) nVisible++;
+    }
+
+    // Update the fixed space for the visible items.
+    this._fixed = this._spacing * Math.max(0, nVisible - 1);
+
+    // Setup the initial size limits.
+    let minW = 0;
+    let minH = 0;
+    let maxW = Infinity;
+    let maxH = Infinity;
+
+    // Update the sizers and compute the new size limits.
+    switch (this._direction) {
+    case Direction.LeftToRight:
+    case Direction.RightToLeft:
+      minW = this._fixed;
+      maxW = nVisible > 0 ? minW : maxW;
+      for (let i = 0, n = this.childCount(); i < n; ++i) {
+        let child = this.childAt(i);
+        let sizer = this._sizers[i];
+        if (child.isHidden) {
+          sizer.minSize = 0;
+          sizer.maxSize = 0;
+          continue;
+        }
+        let limits = sizeLimits(child.node);
+        sizer.sizeHint = BoxLayout.getSizeBasis(child);
+        sizer.stretch = BoxLayout.getStretch(child);
+        sizer.minSize = limits.minWidth;
+        sizer.maxSize = limits.maxWidth;
+        minW += limits.minWidth;
+        maxW += limits.maxWidth;
+        minH = Math.max(minH, limits.minHeight);
+        maxH = Math.min(maxH, limits.maxHeight);
+      }
+      break;
+    case Direction.TopToBottom:
+    case Direction.BottomToTop:
+      minH = this._fixed;
+      maxH = nVisible > 0 ? minH : maxH;
+      for (let i = 0, n = this.childCount(); i < n; ++i) {
+        let child = this.childAt(i);
+        let sizer = this._sizers[i];
+        if (child.isHidden) {
+          sizer.minSize = 0;
+          sizer.maxSize = 0;
+          continue;
+        }
+        let limits = sizeLimits(child.node);
+        sizer.sizeHint = BoxLayout.getSizeBasis(child);
+        sizer.stretch = BoxLayout.getStretch(child);
+        sizer.minSize = limits.minHeight;
+        sizer.maxSize = limits.maxHeight;
+        minH += limits.minHeight;
+        maxH += limits.maxHeight;
+        minW = Math.max(minW, limits.minWidth);
+        maxW = Math.min(maxW, limits.maxWidth);
+      }
+      break;
+    }
+
+    // Update the box sizing and add it to the size constraints.
+    let box = this._box = boxSizing(this.parent.node);
+    minW += box.horizontalSum;
+    minH += box.verticalSum;
+    maxW += box.horizontalSum;
+    maxH += box.verticalSum;
+
+    // Update the panel's size constraints.
+    let style = this.parent.node.style;
+    style.minWidth = minW + 'px';
+    style.minHeight = minH + 'px';
+    style.maxWidth = maxW === Infinity ? 'none' : maxW + 'px';
+    style.maxHeight = maxH === Infinity ? 'none' : maxH + 'px';
+
+    // Notify the ancestor that it should fit immediately.
+    let ancestor = this.parent.parent;
+    if (ancestor) sendMessage(ancestor, Widget.MsgFitRequest);
+
+    // Notify the parent that it should update immediately.
+    sendMessage(this.parent, Widget.MsgUpdateRequest);
+  }
+
+  /**
+   * Update the layout position and size of the child widgets.
+   *
+   * The parent offset dimensions should be `-1` if unknown.
+   */
+  private _update(offsetWidth: number, offsetHeight: number): void {
+    // Bail early if there are no children to layout.
+    if (this.childCount() === 0) {
+      return;
+    }
+
+    // Measure the parent if the offset dimensions are unknown.
+    if (offsetWidth < 0) {
+      offsetWidth = this.parent.node.offsetWidth;
+    }
+    if (offsetHeight < 0) {
+      offsetHeight = this.parent.node.offsetHeight;
+    }
+
+    // Ensure the parent box sizing data is computed.
+    let box = this._box || (this._box = boxSizing(this.parent.node));
+
+    // Compute the layout area adjusted for border and padding.
+    let top = box.paddingTop;
+    let left = box.paddingLeft;
+    let width = offsetWidth - box.horizontalSum;
+    let height = offsetHeight - box.verticalSum;
+
+    // Distribute the layout space to the box sizers.
+    switch (this._direction) {
+    case Direction.LeftToRight:
+    case Direction.RightToLeft:
+      boxCalc(this._sizers, Math.max(0, width - this._fixed));
+      break;
+    case Direction.TopToBottom:
+    case Direction.BottomToTop:
+      boxCalc(this._sizers, Math.max(0, height - this._fixed));
+      break;
+    }
+
+    // Layout the children using the computed box sizes.
+    switch (this._direction) {
+    case Direction.LeftToRight:
+      for (let i = 0, n = this.childCount(); i < n; ++i) {
+        let child = this.childAt(i);
+        if (child.isHidden) {
+          continue;
+        }
+        let size = this._sizers[i].size;
+        BoxLayoutPrivate.setGeometry(child, left, top, size, height);
+        left += size + this._spacing;
+      }
+      break;
+    case Direction.TopToBottom:
+      for (let i = 0, n = this.childCount(); i < n; ++i) {
+        let child = this.childAt(i);
+        if (child.isHidden) {
+          continue;
+        }
+        let size = this._sizers[i].size;
+        BoxLayoutPrivate.setGeometry(child, left, top, width, size);
+        top += size + this._spacing;
+      }
+      break;
+    case Direction.RightToLeft:
+      left += width;
+      for (let i = 0, n = this.childCount(); i < n; ++i) {
+        let child = this.childAt(i);
+        if (child.isHidden) {
+          continue;
+        }
+        let size = this._sizers[i].size;
+        BoxLayoutPrivate.setGeometry(child, left - size, top, size, height);
+        left -= size + this._spacing;
+      }
+      break;
+    case Direction.BottomToTop:
+      top += height;
+      for (let i = 0, n = this.childCount(); i < n; ++i) {
+        let child = this.childAt(i);
+        if (child.isHidden) {
+          continue;
+        }
+        let size = this._sizers[i].size;
+        BoxLayoutPrivate.setGeometry(child, left, top - size, width, size);
+        top -= size + this._spacing;
+      }
+      break;
+    }
+  }
+
+  private _fixed = 0;
   private _spacing = 8;
+  private _box: IBoxSizing = null;
+  private _sizers: BoxSizer[] = [];
   private _direction = Direction.TopToBottom;
 }
 
@@ -515,15 +697,6 @@ namespace BoxLayoutPrivate {
   const IsIE = /Trident/.test(navigator.userAgent);
 
   /**
-   * The property descriptor for the box layout sizers.
-   */
-  export
-  const sizersProperty = new Property<BoxLayout, BoxSizer[]>({
-    name: 'sizers',
-    create: () => [],
-  });
-
-  /**
    * The property descriptor for a widget stretch factor.
    */
   export
@@ -583,185 +756,33 @@ namespace BoxLayoutPrivate {
   }
 
   /**
-   * Fit the layout to the total size required by the child widgets.
+   * Set the layout geometry of a child widget.
    */
   export
-  function fit(layout: BoxLayout): void {
-    // Bail early if there is no parent.
-    let parent = layout.parent;
-    if (!parent) {
-      return;
+  function setGeometry(widget: Widget, left: number, top: number, width: number, height: number): void {
+    let resized = false;
+    let style = widget.node.style;
+    let rect = rectProperty.get(widget);
+    if (rect.top !== top) {
+      rect.top = top;
+      style.top = `${top}px`;
     }
-
-    // Compute the visible item count.
-    let visibleCount = 0;
-    for (let i = 0, n = layout.childCount(); i < n; ++i) {
-      if (!layout.childAt(i).isHidden) visibleCount++;
+    if (rect.left !== left) {
+      rect.left = left;
+      style.left = `${left}px`;
     }
-
-    // Update the fixed space for the visible items.
-    let fixedSpace = layout.spacing * Math.max(0, visibleCount - 1);
-    fixedSpaceProperty.set(layout, fixedSpace);
-
-    // Update the sizers and compute the new size limits.
-    let minW = 0;
-    let minH = 0;
-    let maxW = Infinity;
-    let maxH = Infinity;
-    let dir = layout.direction;
-    let sizers = sizersProperty.get(layout);
-    if (dir === Direction.LeftToRight || dir === Direction.RightToLeft) {
-      minW = fixedSpace;
-      maxW = visibleCount > 0 ? minW : maxW;
-      for (let i = 0, n = layout.childCount(); i < n; ++i) {
-        let widget = layout.childAt(i);
-        let sizer = sizers[i];
-        if (widget.isHidden) {
-          sizer.minSize = 0;
-          sizer.maxSize = 0;
-          continue;
-        }
-        let limits = sizeLimits(widget.node);
-        sizer.sizeHint = sizeBasisProperty.get(widget);
-        sizer.stretch = stretchProperty.get(widget);
-        sizer.minSize = limits.minWidth;
-        sizer.maxSize = limits.maxWidth;
-        minW += limits.minWidth;
-        maxW += limits.maxWidth;
-        minH = Math.max(minH, limits.minHeight);
-        maxH = Math.min(maxH, limits.maxHeight);
-      }
-    } else {
-      minH = fixedSpace;
-      maxH = visibleCount > 0 ? minH : maxH;
-      for (let i = 0, n = layout.childCount(); i < n; ++i) {
-        let widget = layout.childAt(i);
-        let sizer = sizers[i];
-        if (widget.isHidden) {
-          sizer.minSize = 0;
-          sizer.maxSize = 0;
-          continue;
-        }
-        let limits = sizeLimits(widget.node);
-        sizer.sizeHint = sizeBasisProperty.get(widget);
-        sizer.stretch = stretchProperty.get(widget);
-        sizer.minSize = limits.minHeight;
-        sizer.maxSize = limits.maxHeight;
-        minH += limits.minHeight;
-        maxH += limits.maxHeight;
-        minW = Math.max(minW, limits.minWidth);
-        maxW = Math.min(maxW, limits.maxWidth);
-      }
+    if (rect.width !== width) {
+      resized = true;
+      rect.width = width;
+      style.width = `${width}px`;
     }
-
-    // Update the box sizing and add it to the size constraints.
-    let box = boxSizing(parent.node);
-    boxSizingProperty.set(parent, box);
-    minW += box.horizontalSum;
-    minH += box.verticalSum;
-    maxW += box.horizontalSum;
-    maxH += box.verticalSum;
-
-    // Update the panel's size constraints.
-    let style = parent.node.style;
-    style.minWidth = minW + 'px';
-    style.minHeight = minH + 'px';
-    style.maxWidth = maxW === Infinity ? 'none' : maxW + 'px';
-    style.maxHeight = maxH === Infinity ? 'none' : maxH + 'px';
-
-    // Notify the ancestor that it should fit immediately.
-    if (parent.parent) sendMessage(parent.parent, Widget.MsgFitRequest);
-
-    // Notify the parent that it should update immediately.
-    sendMessage(parent, Widget.MsgUpdateRequest);
-  }
-
-  /**
-   * Layout the children using the given offset width and height.
-   *
-   * If the dimensions are unknown, they should be specified as `-1`.
-   */
-  export
-  function update(layout: BoxLayout, offsetWidth: number, offsetHeight: number): void {
-    // Bail early if there are no children to layout.
-    if (layout.childCount() === 0) {
-      return;
+    if (rect.height !== height) {
+      resized = true;
+      rect.height = height;
+      style.height = `${height}px`;
     }
-
-    // Bail early if there is no parent.
-    let parent = layout.parent;
-    if (!parent) {
-      return;
-    }
-
-    // Measure the parent if the offset dimensions are unknown.
-    if (offsetWidth < 0) {
-      offsetWidth = parent.node.offsetWidth;
-    }
-    if (offsetHeight < 0) {
-      offsetHeight = parent.node.offsetHeight;
-    }
-
-    // Lookup the layout data.
-    let dir = layout.direction;
-    let spacing = layout.spacing;
-    let box = boxSizingProperty.get(parent);
-    let sizers = sizersProperty.get(layout);
-    let fixedSpace = fixedSpaceProperty.get(layout);
-
-    // Compute the actual layout bounds adjusted for border and padding.
-    let top = box.paddingTop;
-    let left = box.paddingLeft;
-    let width = offsetWidth - box.horizontalSum;
-    let height = offsetHeight - box.verticalSum;
-
-    // Distribute the layout space and layout the children.
-    if (dir === Direction.LeftToRight) {
-      boxCalc(sizers, Math.max(0, width - fixedSpace));
-      for (let i = 0, n = layout.childCount(); i < n; ++i) {
-        let widget = layout.childAt(i);
-        if (widget.isHidden) {
-          continue;
-        }
-        let size = sizers[i].size;
-        setGeometry(widget, left, top, size, height);
-        left += size + spacing;
-      }
-    } else if (dir === Direction.TopToBottom) {
-      boxCalc(sizers, Math.max(0, height - fixedSpace));
-      for (let i = 0, n = layout.childCount(); i < n; ++i) {
-        let widget = layout.childAt(i);
-        if (widget.isHidden) {
-          continue;
-        }
-        let size = sizers[i].size;
-        setGeometry(widget, left, top, width, size);
-        top += size + spacing;
-      }
-    } else if (dir === Direction.RightToLeft) {
-      left += width;
-      boxCalc(sizers, Math.max(0, width - fixedSpace));
-      for (let i = 0, n = layout.childCount(); i < n; ++i) {
-        let widget = layout.childAt(i);
-        if (widget.isHidden) {
-          continue;
-        }
-        let size = sizers[i].size;
-        setGeometry(widget, left - size, top, size, height);
-        left -= size + spacing;
-      }
-    } else {
-      top += height;
-      boxCalc(sizers, Math.max(0, height - fixedSpace));
-      for (let i = 0, n = layout.childCount(); i < n; ++i) {
-        let widget = layout.childAt(i);
-        if (widget.isHidden) {
-          continue;
-        }
-        let size = sizers[i].size;
-        setGeometry(widget, left, top - size, width, size);
-        top -= size + spacing;
-      }
+    if (resized) {
+      sendMessage(widget, new ResizeMessage(width, height));
     }
   }
 
@@ -799,59 +820,11 @@ namespace BoxLayoutPrivate {
   });
 
   /**
-   * A property descriptor for the box sizing of a widget.
-   */
-  var boxSizingProperty = new Property<Widget, IBoxSizing>({
-    name: 'boxSizing',
-    create: owner => boxSizing(owner.node),
-  });
-
-  /**
-   * A property descriptor for the box layout fixed spacing.
-   */
-  var fixedSpaceProperty = new Property<BoxLayout, number>({
-    name: 'fixedSpace',
-    value: 0,
-  });
-
-  /**
    * The change handler for the attached child properties.
    */
   function onChildPropertyChanged(child: Widget): void {
     let parent = child.parent;
     let layout = parent && parent.layout;
     if (layout instanceof BoxLayout) parent.fit();
-  }
-
-  /**
-   * Set the offset geometry for the given widget.
-   *
-   * A resize message will be dispatched to the widget if appropriate.
-   */
-  function setGeometry(widget: Widget, left: number, top: number, width: number, height: number): void {
-    let resized = false;
-    let style = widget.node.style;
-    let rect = rectProperty.get(widget);
-    if (rect.top !== top) {
-      rect.top = top;
-      style.top = top + 'px';
-    }
-    if (rect.left !== left) {
-      rect.left = left;
-      style.left = left + 'px';
-    }
-    if (rect.width !== width) {
-      resized = true;
-      rect.width = width;
-      style.width = width + 'px';
-    }
-    if (rect.height !== height) {
-      resized = true;
-      rect.height = height;
-      style.height = height + 'px';
-    }
-    if (resized) {
-      sendMessage(widget, new ResizeMessage(width, height));
-    }
   }
 }
