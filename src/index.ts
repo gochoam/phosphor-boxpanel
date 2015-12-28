@@ -260,7 +260,7 @@ class BoxLayout extends PanelLayout {
     if (!this.parent) {
       return;
     }
-    BoxLayoutPrivate.toggleDirClass(this.parent, value);
+    BoxLayoutPrivate.setDirection(this.parent, value);
     this.parent.fit();
   }
 
@@ -294,7 +294,7 @@ class BoxLayout extends PanelLayout {
    * on its parent widget.
    */
   protected initialize(): void {
-    BoxLayoutPrivate.toggleDirClass(this.parent, this.direction);
+    BoxLayoutPrivate.setDirection(this.parent, this.direction);
     super.initialize();
   }
 
@@ -722,10 +722,10 @@ namespace BoxLayoutPrivate {
   });
 
   /**
-   * Toggle the CSS direction class for the given widget.
+   * Set the CSS direction class for the given widget.
    */
   export
-  function toggleDirClass(widget: Widget, dir: Direction): void {
+  function setDirection(widget: Widget, dir: Direction): void {
     widget.toggleClass(LEFT_TO_RIGHT_CLASS, dir === Direction.LeftToRight);
     widget.toggleClass(RIGHT_TO_LEFT_CLASS, dir === Direction.RightToLeft);
     widget.toggleClass(TOP_TO_BOTTOM_CLASS, dir === Direction.TopToBottom);
