@@ -498,10 +498,10 @@ class BoxLayout extends PanelLayout {
 
     // Update the parent's size constraints.
     let style = this.parent.node.style;
-    style.minWidth = minW + 'px';
-    style.minHeight = minH + 'px';
-    style.maxWidth = maxW === Infinity ? 'none' : maxW + 'px';
-    style.maxHeight = maxH === Infinity ? 'none' : maxH + 'px';
+    style.minWidth = `${minW}px`;
+    style.minHeight = `${minH}px`;
+    style.maxWidth = maxW === Infinity ? 'none' : `${maxW}px`;
+    style.maxHeight = maxH === Infinity ? 'none' : `${maxH}px`;
 
     // Notify the ancestor that it should fit immediately.
     let ancestor = this.parent.parent;
