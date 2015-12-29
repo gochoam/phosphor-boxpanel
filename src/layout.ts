@@ -280,47 +280,35 @@ class BoxLayout extends PanelLayout {
     let minH = 0;
     let maxW = Infinity;
     let maxH = Infinity;
-
-    // Update the sizers and compute the new size limits.
-    switch (this._direction) {
-    case Direction.LeftToRight:
-    case Direction.RightToLeft:
+    let horz = BoxLayoutPrivate.isHorizontal(this._direction);
+    if (horz) {
       minW = this._fixed;
       maxW = nVisible > 0 ? minW : maxW;
-      for (let i = 0, n = this.childCount(); i < n; ++i) {
-        let child = this.childAt(i);
-        let sizer = this._sizers[i];
-        if (child.isHidden) {
-          sizer.minSize = 0;
-          sizer.maxSize = 0;
-          continue;
-        }
-        let limits = sizeLimits(child.node);
-        sizer.sizeHint = BoxLayout.getSizeBasis(child);
-        sizer.stretch = BoxLayout.getStretch(child);
+    } else {
+      minH = this._fixed;
+      maxH = nVisible > 0 ? minH : maxH;
+    }
+
+    // Update the sizers and computed size limits.
+    for (let i = 0, n = this.childCount(); i < n; ++i) {
+      let child = this.childAt(i);
+      let sizer = this._sizers[i];
+      if (child.isHidden) {
+        sizer.minSize = 0;
+        sizer.maxSize = 0;
+        continue;
+      }
+      let limits = sizeLimits(child.node);
+      sizer.sizeHint = BoxLayout.getSizeBasis(child);
+      sizer.stretch = BoxLayout.getStretch(child);
+      if (horz) {
         sizer.minSize = limits.minWidth;
         sizer.maxSize = limits.maxWidth;
         minW += limits.minWidth;
         maxW += limits.maxWidth;
         minH = Math.max(minH, limits.minHeight);
         maxH = Math.min(maxH, limits.maxHeight);
-      }
-      break;
-    case Direction.TopToBottom:
-    case Direction.BottomToTop:
-      minH = this._fixed;
-      maxH = nVisible > 0 ? minH : maxH;
-      for (let i = 0, n = this.childCount(); i < n; ++i) {
-        let child = this.childAt(i);
-        let sizer = this._sizers[i];
-        if (child.isHidden) {
-          sizer.minSize = 0;
-          sizer.maxSize = 0;
-          continue;
-        }
-        let limits = sizeLimits(child.node);
-        sizer.sizeHint = BoxLayout.getSizeBasis(child);
-        sizer.stretch = BoxLayout.getStretch(child);
+      } else {
         sizer.minSize = limits.minHeight;
         sizer.maxSize = limits.maxHeight;
         minH += limits.minHeight;
@@ -328,7 +316,6 @@ class BoxLayout extends PanelLayout {
         minW = Math.max(minW, limits.minWidth);
         maxW = Math.min(maxW, limits.maxWidth);
       }
-      break;
     }
 
     // Update the box sizing and add it to the size constraints.
@@ -381,66 +368,49 @@ class BoxLayout extends PanelLayout {
     let width = offsetWidth - box.horizontalSum;
     let height = offsetHeight - box.verticalSum;
 
-    // Distribute the layout space to the box sizers.
+    // Distribute the layout space and adjust the start position.
     switch (this._direction) {
     case Direction.LeftToRight:
-    case Direction.RightToLeft:
       boxCalc(this._sizers, Math.max(0, width - this._fixed));
       break;
     case Direction.TopToBottom:
+      boxCalc(this._sizers, Math.max(0, height - this._fixed));
+      break;
+    case Direction.RightToLeft:
+      boxCalc(this._sizers, Math.max(0, width - this._fixed));
+      left += width;
+      break;
     case Direction.BottomToTop:
       boxCalc(this._sizers, Math.max(0, height - this._fixed));
+      top += height;
       break;
     }
 
     // Layout the children using the computed box sizes.
-    switch (this._direction) {
-    case Direction.LeftToRight:
-      for (let i = 0, n = this.childCount(); i < n; ++i) {
-        let child = this.childAt(i);
-        if (child.isHidden) {
-          continue;
-        }
-        let size = this._sizers[i].size;
+    for (let i = 0, n = this.childCount(); i < n; ++i) {
+      let child = this.childAt(i);
+      if (child.isHidden) {
+        continue;
+      }
+      let size = this._sizers[i].size;
+      switch (this._direction) {
+      case Direction.LeftToRight:
         BoxLayoutPrivate.setGeometry(child, left, top, size, height);
         left += size + this._spacing;
-      }
-      break;
-    case Direction.TopToBottom:
-      for (let i = 0, n = this.childCount(); i < n; ++i) {
-        let child = this.childAt(i);
-        if (child.isHidden) {
-          continue;
-        }
-        let size = this._sizers[i].size;
+        break;
+      case Direction.TopToBottom:
         BoxLayoutPrivate.setGeometry(child, left, top, width, size);
         top += size + this._spacing;
-      }
-      break;
-    case Direction.RightToLeft:
-      left += width;
-      for (let i = 0, n = this.childCount(); i < n; ++i) {
-        let child = this.childAt(i);
-        if (child.isHidden) {
-          continue;
-        }
-        let size = this._sizers[i].size;
+        break;
+      case Direction.RightToLeft:
         BoxLayoutPrivate.setGeometry(child, left - size, top, size, height);
         left -= size + this._spacing;
-      }
-      break;
-    case Direction.BottomToTop:
-      top += height;
-      for (let i = 0, n = this.childCount(); i < n; ++i) {
-        let child = this.childAt(i);
-        if (child.isHidden) {
-          continue;
-        }
-        let size = this._sizers[i].size;
+        break;
+      case Direction.BottomToTop:
         BoxLayoutPrivate.setGeometry(child, left, top - size, width, size);
         top -= size + this._spacing;
+        break;
       }
-      break;
     }
   }
 
@@ -562,6 +532,14 @@ namespace BoxLayoutPrivate {
     coerce: (owner, value) => Math.max(0, value | 0),
     changed: onChildPropertyChanged,
   });
+
+  /**
+   * Test whether a direction has horizontal orientation.
+   */
+  export
+  function isHorizontal(dir: Direction): boolean {
+    return dir === Direction.LeftToRight || dir === Direction.RightToLeft;
+  }
 
   /**
    * Toggle the CSS direction class for the given widget.
