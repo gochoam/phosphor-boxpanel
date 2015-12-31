@@ -59,11 +59,6 @@
     "lib/*.d.ts",
     "lib/*.js"
   ],
-  "browserify": {
-    "transform": [
-      "browserify-css"
-    ]
-  },
   "keywords": [
     "box",
     "boxlayout",
