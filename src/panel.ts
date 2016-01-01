@@ -47,6 +47,11 @@ class BoxPanel extends Panel {
   }
 
   /**
+   * The static type of the constructor.
+   */
+  "constructor": typeof BoxPanel;
+
+  /**
    * Construct a new box panel.
    */
   constructor() {
