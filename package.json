@@ -37,10 +37,8 @@
   "scripts": {
     "clean": "rimraf lib && rimraf test/build && rimraf test/coverage",
     "clean:example": "rimraf example/bundle.js",
-    "build:src": "tsc --project src",
-    "build:test": "tsc --project test/src",
     "build:example": "webpack --config example/webpack.conf.js",
-    "build": "npm run build:src",
+    "build": "tsc --project src",
     "docs": "rimraf docs/api && typedoc --options scripts/tdoptions.json",
     "postinstall": "npm dedupe",
     "prepublish": "npm run build",
