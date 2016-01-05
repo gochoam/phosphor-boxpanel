@@ -20,7 +20,6 @@ then
 
     rm -rf ./*
     cp -r ../docs/* ./.
-
     git add -A
     git commit -m "autocommit docs"
     git push origin gh-pages
