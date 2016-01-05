@@ -21,9 +21,9 @@ import expect = require('expect.js');
 //   ResizeMessage, Widget
 // } from 'phosphor-widget';
 
-// import {
-//   BoxPanel, Direction
-// } from '../../lib/index';
+import {
+   BoxPanel, Direction
+} from '../../lib/index';
 
 
 // class LogPanel extends BoxPanel {
@@ -53,7 +53,7 @@ describe('phosphor-boxpanel', () => {
   describe('stub', () => {
 
     it('should pass', () => {
-
+      let box = new BoxPanel();
     });
 
   });
