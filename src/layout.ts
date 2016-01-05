@@ -89,11 +89,6 @@ enum Direction {
 export
 class BoxLayout extends PanelLayout {
   /**
-   * The static type of the constructor.
-   */
-  "constructor": typeof BoxLayout;
-
-  /**
    * Get the layout direction for the box layout.
    */
   get direction(): Direction {
