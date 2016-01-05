@@ -8,8 +8,6 @@ A Phosphor layout panel which arranges its children into a single row or column.
 
 [API Docs](http://phosphorjs.github.io/phosphor-boxpanel/api/)
 
-[Live Example](http://phosphorjs.github.io/phosphor-boxpanel/example/)
-
 
 Package Install
 ---------------
