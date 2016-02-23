@@ -5,8 +5,8 @@ phosphor-boxpanel
 [![Coverage Status](https://coveralls.io/repos/phosphorjs/phosphor-boxpanel/badge.svg?branch=master&service=github)](https://coveralls.io/github/phosphorjs/phosphor-boxpanel?branch=master)
 
 This module provides a phosphor layout panel which arranges its children into a
-single row or column, making possible to change the layout direction, spacing
-and length.
+single row or column, making it possible to change the layout direction,
+spacing and length.
 
 
 Package Install
