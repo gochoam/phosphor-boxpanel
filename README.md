@@ -6,7 +6,7 @@ phosphor-boxpanel
 
 This module provides a phosphor layout panel which arranges its children into a
 single row or column, making it possible to change the layout direction,
-spacing and length.
+spacing and the basis length of its children.
 
 
 Package Install
@@ -126,8 +126,8 @@ let w2 = new Widget();
 let w3 = new Widget();
 ```
 
-The size of the widgets inside a box panel can be set by means of the widget
-stretch factors, using relative sizes for each widget inside the box
+The relative sizes of the widgets inside a box panel can be set by means of the
+widget stretch factors, using relative weights for each widget inside the box
 panel. The following code sets the stretch factors to 1, 2 and 3, making `w2`
 twice as wide as `w1` and `w3`3 times wider. The actual size depends on the box
 area these have to fill:
@@ -140,8 +140,9 @@ BoxPanel.setStretch(w2, 2);
 BoxPanel.setStretch(w3, 3);
 ```
 
-Another option is to set the size basis using `.setSizeBasis()` which takes as
-arguments the widget and the corresponding size in pixels.
+The size basis is used as the initial size of the widget before growing or
+shrinking to accommodate the available space. It is set using `.setSizeBasis()`
+which takes as arguments the widget and the corresponding size in pixels.
 
 ```typescript
 // Set the widget size basis (optional).
@@ -152,7 +153,7 @@ BoxPanel.setSizeBasis(w3, 350);
 
 A box panel arranges its children in a single row or column, but some
 parameters can be changed to customize the layout. `.direction` changes the
-direction, it is possible to select `BottomToTop`, `LeftToRight`, `RightToLeft`
+direction. It is possible to select `BottomToTop`, `LeftToRight`, `RightToLeft`
 and `TopToBottom`. The inter-element spacing is set by `.spacing`
 
 ```typescript
@@ -165,36 +166,10 @@ panel.addChild(w2);
 panel.addChild(w3);
 ```
 
-There are other methods to achieve a more dynamic layout like `.hide()` and
-`.show()`. Message handlers for several events are also provided:
-`onAfterAttach()`, `onBeforeAttach()`, `onAfterShow()`, `onBeforeShow()` and so
-on.
-
-Changing css-related properties is simple, `phosphor-boxpanel` has methods to
-set the panel id and toggle CSS classes:
-
-```typescript
-panel.id = 'main';
-panel.addClass('foo');
-panel.addClass('bar');
-panel.removeClass('foo');
-panel.toggleClass('bar', false);
-```
-
-A BoxPanel can be attached to the DOM with the `.attach()` method, which
-ensures that the proper attachment messages are dispatched. Likewise box panels
-can be detached from the DOM with the `.detach()` method, though it is more
-common to simply use `.dispose()`.
-
-```typescript
-panel.attach(document.body);
-
-// sometime later...
-panel.detach();
-
-// or almost equivalently
-panel.dispose();
-```
+Other methods to achieve a more dynamic layout like `.hide()` and `.show()`,
+message handlers for several events and methods to change css-related
+properties are also provided as part of the [base Widget
+class](http://phosphorjs.github.io/phosphor-widget/api/)
 
 
 API
